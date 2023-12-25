@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Positions extends Model
 {
@@ -33,4 +34,9 @@ class Positions extends Model
         'margin_type',
         'status',
     ];
+
+    public function symbol(): HasOne
+    {
+        return $this->hasOne(Symbols::class);
+    }
 }

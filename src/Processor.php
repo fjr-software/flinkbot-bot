@@ -60,6 +60,8 @@ class Processor
      *
      * @param int $customerId
      * @param array $bots
+     * @param string $processFile
+     * @param int $timeout
      */
     public function __construct(
         private readonly int $customerId,
@@ -70,6 +72,11 @@ class Processor
         $this->loop = Loop::get();
     }
 
+    /**
+     * Process
+     *
+     * @return void
+     */
     public function process(): void
     {
         $this->startTime = microtime(true);
@@ -83,6 +90,11 @@ class Processor
         $this->endTime = microtime(true);
     }
 
+    /**
+     * Get time execution
+     *
+     * @return float|null
+     */
     public function timeExecution(): ?float
     {
         if (!$this->startTime || !$this->endTime) {
@@ -92,17 +104,14 @@ class Processor
         return $this->endTime - $this->startTime;
     }
 
-    private function processBot(int $botId, array $symbols): void
-    {
-        foreach ($symbols as $symbol) {
-            $this->status[$botId][$symbol] = self::STATUS_RUN;
-
-            $this->loop->futureTick(function () use ($botId, $symbol) {
-                $this->process[$botId][$symbol] = $this->retrySymbol($botId, $symbol);
-            });
-        }
-    }
-
+    /**
+     * Close process
+     *
+     * @param int $botId
+     * @param string $symbol
+     * @param bool $force
+     * @return void
+     */
     public function closeProcess(int $botId, string $symbol, bool $force = false): void
     {
         $this->status[$botId][$symbol] = self::STATUS_STOP;
@@ -123,6 +132,12 @@ class Processor
         }
     }
 
+    /**
+     * Close all process
+     *
+     * @param bool $force
+     * @return void
+     */
     public function closeAllProcess(bool $force = false): void
     {
         foreach ($this->status as $botId => $symbols) {
@@ -151,6 +166,31 @@ class Processor
         }
     }
 
+    /**
+     * Process bot
+     *
+     * @param int $botId
+     * @param array $symbols
+     * @return void
+     */
+    private function processBot(int $botId, array $symbols): void
+    {
+        foreach ($symbols as $symbol) {
+            $this->status[$botId][$symbol] = self::STATUS_RUN;
+
+            $this->loop->futureTick(function () use ($botId, $symbol) {
+                $this->process[$botId][$symbol] = $this->retrySymbol($botId, $symbol);
+            });
+        }
+    }
+
+    /**
+     * Retry symbol
+     *
+     * @param int $botId
+     * @param string $symbol
+     * @return Process
+     */
     private function retrySymbol(int $botId, string $symbol): Process
     {
         $process = new Process($this->buildCommand($botId, $symbol));
@@ -233,6 +273,13 @@ class Processor
         return $process;
     }
 
+    /**
+     * Build command
+     *
+     * @param int $botId
+     * @param string $symbol
+     * @return array
+     */
     private function buildCommand(int $botId, string $symbol): array
     {
         return [

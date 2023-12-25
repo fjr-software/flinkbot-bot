@@ -96,7 +96,7 @@ class Analyzer
     public function run(string $symbol): void
     {
         $this->loop->addPeriodicTimer(5, function ($timer) use (&$i, $symbol) {
-            echo "Pending - {$symbol} " . date('Y-m-d H:i:s') . "\n";
+            echo "Analyzer - {$symbol} " . date('Y-m-d H:i:s') . "\n";
 
             try {
                 $binance = new Binance(PUBLIC_KEY, PRIVATE_KEY);

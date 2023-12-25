@@ -268,6 +268,13 @@ class Processor
 
                 echo "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}\n";
             });
+
+            $process->stderr->on('data', function ($output) use ($botId, $symbol) {
+                $outputTmp = explode("\n", $output);
+                $outputTmp = implode("\n\t", $outputTmp);
+
+                echo "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}\n";
+            });
         });
 
         return $process;

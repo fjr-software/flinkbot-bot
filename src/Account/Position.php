@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
-use Illuminate\Database\Eloquent\Collection;
 
 class Position
 {
@@ -75,13 +74,19 @@ class Position
      * Get positions
      *
      * @param string $symbol
-     * @return Collection
+     * @return array
      */
-    public function get(string $symbol): Collection
+    public function get(string $symbol): array
     {
-        return array_filter(
-            Positions::where(['user_id' => 1])->get(),
-            fn($position) => $position->symbol->pair === $symbol
-        );
+        $positions = Positions::where(['user_id' => 1])->get();
+        $result = [];
+
+        foreach ($positions as $position) {
+            if ($position->symbol->pair === $symbol) {
+                $result[] = $position;
+            }
+        }
+
+        return $result;
     }
 }

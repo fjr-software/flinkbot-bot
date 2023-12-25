@@ -8,15 +8,14 @@ use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
 
+use FjrSoftware\Flinkbot\Bot\Account\Position;
+use FjrSoftware\Flinkbot\Bot\Model\Bots;
 use FjrSoftware\Flinkbot\Exchange\Binance;
-
+use FjrSoftware\Flinkbot\Exchange\ExchangeInterface;
 use FjrSoftware\Flinkbot\Indicator\StochasticRSI;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
 use FjrSoftware\Flinkbot\Indicator\Condition;
 use FjrSoftware\Flinkbot\Indicator\OperatorInterface;
-
-define('PUBLIC_KEY', 'Remno3Mox2ABEJ80AlzstcYdV0K6VznqVuS5a5lf2qWszWbvt4Z74YNQvOp4DtBd');
-define('PRIVATE_KEY', 'FJS4eWOv8fyjMhABtIo1RhNi2a0yucYAwHtzOxio0pjiu4HCaiG3AyMhZMaKcH64');
 
 define('PROFIT', 50);
 define('MARGIN_BALANCE', 10);
@@ -76,6 +75,21 @@ class Analyzer
     private ?ReadableResourceStream $stream = null;
 
     /**
+     * @var Bots
+     */
+    private Bots $bots;
+
+    /**
+     * @var Position
+     */
+    private Position $position;
+
+    /**
+     * @var ExchangeInterface
+     */
+    private ExchangeInterface $exchange;
+
+    /**
      * Constructor
      *
      * @param int $botId
@@ -83,7 +97,12 @@ class Analyzer
     public function __construct(
         private readonly int $botId
     ) {
+        $this->bots = Bots::where('id', $this->botId)->get();
+        $this->exchange = new Binance($this->bots->getApiKey(), $this->bots->getApiSecret());
+        $this->position = new Position($this->exchange, $this->bots);
+
         $this->loop = Loop::get();
+
         $this->start();
     }
 
@@ -96,14 +115,12 @@ class Analyzer
     public function run(string $symbol): void
     {
         $this->loop->addPeriodicTimer(5, function ($timer) use (&$i, $symbol) {
-            echo "Analyzer - {$symbol} " . date('Y-m-d H:i:s') . "\n";
-
             try {
-                $binance = new Binance(PUBLIC_KEY, PRIVATE_KEY);
+                $this->position->execute($symbol);
 
-                $candles = $binance->getCandles($symbol, '15m', 100);
-                $closes = $binance->getClosePrice($candles);
-                $current = $binance->getCurrentValue($candles, 'close');
+                $candles = $this->exchange->getCandles($symbol, '15m', 100);
+                $closes = $this->exchange->getClosePrice($candles);
+                $current = $this->exchange->getCurrentValue($candles, 'close');
 
                 $indicators = [
                     'SMA' => [
@@ -173,8 +190,7 @@ class Analyzer
                     $side
                 );
 
-                $positions = $binance->getPosition($symbol);
-                $book = $binance->getBook($symbol);
+                $book = $this->exchange->getBook($symbol);
                 $bookBuy = $book['bids'][0];
                 $bookSell = $book['asks'][0];
                 $infoPosition = [
@@ -187,49 +203,31 @@ class Analyzer
                         'roi' => 0
                     ]
                 ];
-                $openOrders = $binance->getOpenOrders($symbol);
+                $openOrders = $this->exchange->getOpenOrders($symbol);
                 $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
                 $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
 
-                foreach ($positions as $position) {
-                    $qty = abs((float) $position['positionAmt']);
-
-                    if ($qty > 0) {
-                        if ($position['positionSide'] === 'LONG') {
-                            $infoPosition['LONG'] = [
-                                'qty' => $qty,
-                                'roi' => $binance->percentage((float) $position['markPrice'], (float) $position['entryPrice']) * $position['leverage']
-                            ];
-                        } else {
-                            $infoPosition['SHORT'] = [
-                                'qty' => $qty,
-                                'roi' => $binance->percentage((float) $position['entryPrice'], (float) $position['markPrice']) * $position['leverage']
-                            ];
-                        }
-                    }
-
-                    $profit = $infoPosition[$position['positionSide']]['roi'] >= PROFIT;
-
-                    if ($qty > 0 && $profit) {
-                        $diffPrice = $binance->calculeProfit($current, 0.10);
-                        $priceCloseGain = (float) ($position['positionSide'] === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
-                        $priceCloseStopGain = (float) ($position['positionSide'] === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
-                        $sideOrder = $position['positionSide'] === 'SHORT' ? 'BUY' : 'SELL';
+                foreach ($this->position->get($symbol) as $position) {
+                    if ($position->status === 'open' && $position->pnl_roi_percent >= PROFIT) {
+                        $diffPrice = $this->exchange->calculeProfit($current, 0.10);
+                        $priceCloseGain = (float) ($position->side === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
+                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
+                        $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
 
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
 
                         if (!$openOrdersClosed) {
-                            $result1 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseGain);
-                            $result2 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseStopGain, true);
+                            $result1 = $this->exchange->closePosition($symbol, $position->side, $priceCloseGain);
+                            $result2 = $this->exchange->closePosition($symbol, $position->side, $priceCloseStopGain, true);
 
-                            echo "Close position - ROI: {$infoPosition[$position['positionSide']]['roi']}\n";
+                            echo "Close position - ROI: {$position->pnl_roi_percent}\n";
                         }
                     }
                 }
 
                 foreach ($openOrders as $openOrder) {
-                    if ($binance->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
-                        $binance->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                    if ($this->exchange->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
+                        $this->exchange->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                         echo "timeout\n";
                     }
                 }
@@ -237,8 +235,8 @@ class Analyzer
                 if ($side) {
                     $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] ||$side === 'SHORT' && !$infoPosition['SHORT']['qty'];
 
-                    $account = $binance->getAccountInformation();
-                    $marginAccount = 100 - $binance->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+                    $account = $this->exchange->getAccountInformation();
+                    $marginAccount = 100 - $this->exchange->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
 
                     if (!$openOrders && ($noPosition || $marginAccount <= MARGIN_BALANCE)) {
                         $price = $bookSell[0];
@@ -251,7 +249,7 @@ class Analyzer
                             $positionSideOrder = 'LONG';
                         }
 
-                        $binance->createOrder([
+                        $this->exchange->createOrder([
                             'symbol' => $symbol,
                             'side' => $sideOrder,
                             'positionSide' => $positionSideOrder,

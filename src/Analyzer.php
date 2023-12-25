@@ -229,7 +229,7 @@ class Analyzer
 
                 foreach ($openOrders as $openOrder) {
                     if ($binance->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
-                        $binance->cancelOrder($openOrder['symbol'], $openOrder['orderId']);
+                        $binance->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                         echo "timeout\n";
                     }
                 }
@@ -273,18 +273,6 @@ class Analyzer
                 $this->exit();
             }
         });
-
-        /*
-        $this->loop->addPeriodicTimer(1, function ($timer) use (&$i, $symbol) {
-            echo "Pending - {$symbol} " . date('Y-m-d H:i:s') . "\n";
-
-            if (++$i >= 30) {
-                $this->loop->cancelTimer($timer);
-                $this->exit();
-            }
-        });
-
-        */
 
         $this->loop->run();
     }

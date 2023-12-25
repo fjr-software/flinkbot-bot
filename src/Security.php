@@ -15,11 +15,11 @@ final class Security
      * Encrypt
      *
      * @param string $data
-     * @param string $key
      * @return string
      */
-    public static function encrypt(string $data, string $key): string
+    public static function encrypt(string $data): string
     {
+        $key = defined('SECRET_KEY') ? SECRET_KEY : '';
         $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length(static::CIPHER_ALGO));
         $encrypted = openssl_encrypt($data, static::CIPHER_ALGO, $key, 0, $iv);
 
@@ -30,11 +30,11 @@ final class Security
      * Decrypt
      *
      * @param string $data
-     * @param string $key
      * @return string
      */
-    public static function decrypt(string $data, string $key): string
+    public static function decrypt(string $data): string
     {
+        $key = defined('SECRET_KEY') ? SECRET_KEY : '';
         list($encryptedData, $iv) = explode('::', base64_decode($data), 2);
 
         return openssl_decrypt($encryptedData, static::CIPHER_ALGO, $key, 0, $iv);

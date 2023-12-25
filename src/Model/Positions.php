@@ -37,6 +37,6 @@ class Positions extends Model
 
     public function symbol(): HasOne
     {
-        return $this->hasOne(Symbols::class, 'symbol_id');
+        return $this->hasOne(Symbols::class, 'id', 'symbol_id');
     }
 }

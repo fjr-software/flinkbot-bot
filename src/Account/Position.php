@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
-use FjrSoftware\Flinkbot\Bot\Model\Bots;
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
-use FjrSoftware\Flinkbot\Bot\Model\Symbols;
 use FjrSoftware\Flinkbot\Exchange\ExchangeInterface;
 
 class Position
@@ -14,12 +12,10 @@ class Position
     /**
      * Constructor
      *
-     * @param ExchangeInterface $exchange
-     * @param Bots $bots
+     * @param Bot $bot
      */
     public function __construct(
-        private readonly ExchangeInterface $exchange,
-        private readonly Bots $bots
+        private readonly Bot $bot
     ) {
     }
 
@@ -34,7 +30,7 @@ class Position
         $symbols = $this->get($symbol);
 
         foreach ($symbols as $symbol) {
-            $positions = $this->exchange->getPosition($symbol->pair);
+            $positions = $this->bot->getExchange()->getPosition($symbol->pair);
 
             foreach ($positions as $position) {
                 $type = $position['marginType'] === 'cross' ? 'CROSSED' : 'ISOLATED';
@@ -51,12 +47,12 @@ class Position
                         $value2 = (float) $position['entryPrice'];
                     }
 
-                    $roiPercent = $this->exchange->percentage($value1, $value2) * $position['leverage'];
+                    $roiPercent = $this->bot->getExchange()->percentage($value1, $value2) * $position['leverage'];
                 }
 
                 Positions::updateOrCreate(
                     [
-                        'user_id' => $this->bots->user_id,
+                        'user_id' => $this->bot->getUserId(),
                         'symbol_id' => $symbol->id,
                         'side' => $position['positionSide']
                     ],

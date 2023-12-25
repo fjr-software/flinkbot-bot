@@ -8,10 +8,8 @@ use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
 
+use FjrSoftware\Flinkbot\Bot\Account\Bot;
 use FjrSoftware\Flinkbot\Bot\Account\Position;
-use FjrSoftware\Flinkbot\Bot\Model\Bots;
-use FjrSoftware\Flinkbot\Exchange\Binance;
-use FjrSoftware\Flinkbot\Exchange\ExchangeInterface;
 use FjrSoftware\Flinkbot\Indicator\StochasticRSI;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
 use FjrSoftware\Flinkbot\Indicator\Condition;
@@ -75,19 +73,14 @@ class Analyzer
     private ?ReadableResourceStream $stream = null;
 
     /**
-     * @var Bots
+     * @var Bot
      */
-    private Bots $bots;
+    private Bot $bot;
 
     /**
      * @var Position
      */
     private Position $position;
-
-    /**
-     * @var ExchangeInterface
-     */
-    private ExchangeInterface $exchange;
 
     /**
      * Constructor
@@ -97,10 +90,8 @@ class Analyzer
     public function __construct(
         private readonly int $botId
     ) {
-        $this->bots = Bots::where('id', $this->botId)->get();
-        $this->exchange = new Binance($this->bots->getApiKey(), $this->bots->getApiSecret());
-        $this->position = new Position($this->exchange, $this->bots);
-
+        $this->bot = new Bot($this->botId);
+        $this->position = new Position($this->bot);
         $this->loop = Loop::get();
 
         $this->start();
@@ -118,9 +109,9 @@ class Analyzer
             try {
                 $this->position->execute($symbol);
 
-                $candles = $this->exchange->getCandles($symbol, '15m', 100);
-                $closes = $this->exchange->getClosePrice($candles);
-                $current = $this->exchange->getCurrentValue($candles, 'close');
+                $candles = $this->bot->getExchange()->getCandles($symbol, '15m', 100);
+                $closes = $this->bot->getExchange()->getClosePrice($candles);
+                $current = $this->bot->getExchange()->getCurrentValue($candles, 'close');
 
                 $indicators = [
                     'SMA' => [
@@ -190,7 +181,7 @@ class Analyzer
                     $side
                 );
 
-                $book = $this->exchange->getBook($symbol);
+                $book = $this->bot->getExchange()->getBook($symbol);
                 $bookBuy = $book['bids'][0];
                 $bookSell = $book['asks'][0];
                 $infoPosition = [
@@ -203,13 +194,13 @@ class Analyzer
                         'roi' => 0
                     ]
                 ];
-                $openOrders = $this->exchange->getOpenOrders($symbol);
+                $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
                 $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
                 $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
 
                 foreach ($this->position->get($symbol) as $position) {
                     if ($position->status === 'open' && $position->pnl_roi_percent >= PROFIT) {
-                        $diffPrice = $this->exchange->calculeProfit($current, 0.10);
+                        $diffPrice = $this->bot->getExchange()->calculeProfit($current, 0.10);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
                         $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
                         $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
@@ -217,8 +208,8 @@ class Analyzer
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
 
                         if (!$openOrdersClosed) {
-                            $result1 = $this->exchange->closePosition($symbol, $position->side, $priceCloseGain);
-                            $result2 = $this->exchange->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                            $result1 = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
+                            $result2 = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
 
                             echo "Close position - ROI: {$position->pnl_roi_percent}\n";
                         }
@@ -226,8 +217,8 @@ class Analyzer
                 }
 
                 foreach ($openOrders as $openOrder) {
-                    if ($this->exchange->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
-                        $this->exchange->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                    if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
+                        $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                         echo "timeout\n";
                     }
                 }
@@ -235,8 +226,8 @@ class Analyzer
                 if ($side) {
                     $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] ||$side === 'SHORT' && !$infoPosition['SHORT']['qty'];
 
-                    $account = $this->exchange->getAccountInformation();
-                    $marginAccount = 100 - $this->exchange->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+                    $account = $this->bot->getExchange()->getAccountInformation();
+                    $marginAccount = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
 
                     if (!$openOrders && ($noPosition || $marginAccount <= MARGIN_BALANCE)) {
                         $price = $bookSell[0];
@@ -249,7 +240,7 @@ class Analyzer
                             $positionSideOrder = 'LONG';
                         }
 
-                        $this->exchange->createOrder([
+                        $this->bot->getExchange()->createOrder([
                             'symbol' => $symbol,
                             'side' => $sideOrder,
                             'positionSide' => $positionSideOrder,

@@ -191,7 +191,7 @@ class Analyzer
             $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
 
             foreach ($positions as $position) {
-                $qty = abs($position['positionAmt']);
+                $qty = abs((float) $position['positionAmt']);
 
                 if ($qty > 0) {
                     if ($position['positionSide'] === 'LONG') {

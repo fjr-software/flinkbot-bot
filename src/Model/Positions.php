@@ -14,4 +14,23 @@ class Positions extends Model
      * @var string
      */
     protected $table = 'positions';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'user_id',
+        'symbol_id',
+        'side',
+        'entry_price',
+        'size',
+        'pnl_roi_percent',
+        'pnl_roi_value',
+        'mark_price',
+        'liquid_price',
+        'margin_type',
+        'status',
+    ];
 }

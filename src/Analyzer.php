@@ -95,8 +95,6 @@ class Analyzer
      */
     public function run(string $symbol): void
     {
-        echo "Started - {$symbol} " . date('Y-m-d H:i:s') . "\n";
-
         $this->loop->addPeriodicTimer(5, function ($timer) use (&$i, $symbol) {
             echo "Pending - {$symbol} " . date('Y-m-d H:i:s') . "\n";
 
@@ -270,7 +268,7 @@ class Analyzer
                 echo "Error: " . $e->getMessage() . "\n";
             }
 
-            if (++$i >= 45) {
+            if (++$i >= 2) {
                 $this->loop->cancelTimer($timer);
                 $this->exit();
             }

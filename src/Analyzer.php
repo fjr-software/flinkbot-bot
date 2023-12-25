@@ -263,9 +263,13 @@ class Analyzer
                     echo "Open position\n";
                 }
             }
-        } finally {
-            $this->exit();
+        } catch (\Exception $e) {
+            echo "Error: " . $e->getMessage() . "\n";
         }
+
+        echo "Finished - {$symbol} " . date('Y-m-d H:i:s') . "\n";
+
+        $this->exit();
 
         /*
         $this->loop->addPeriodicTimer(1, function ($timer) use (&$i, $symbol) {
@@ -279,8 +283,6 @@ class Analyzer
 
         $this->loop->run();
         */
-
-        echo "Finished - {$symbol} " . date('Y-m-d H:i:s') . "\n";
     }
 
     /**

@@ -197,12 +197,12 @@ class Analyzer
                     if ($position['positionSide'] === 'LONG') {
                         $infoPosition['LONG'] = [
                             'qty' => $qty,
-                            'roi' => $binance->percentage($position['markPrice'], $position['entryPrice']) * $position['leverage']
+                            'roi' => $binance->percentage((float) $position['markPrice'], (float) $position['entryPrice']) * $position['leverage']
                         ];
                     } else {
                         $infoPosition['SHORT'] = [
                             'qty' => $qty,
-                            'roi' => $binance->percentage($position['entryPrice'], $position['markPrice']) * $position['leverage']
+                            'roi' => $binance->percentage((float) $position['entryPrice'], (float) $position['markPrice']) * $position['leverage']
                         ];
                     }
                 }

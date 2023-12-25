@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
-use FjrSoftware\Flinkbot\Exchange\ExchangeInterface;
+use Illuminate\Database\Eloquent\Collection;
 
 class Position
 {
@@ -75,9 +75,9 @@ class Position
      * Get positions
      *
      * @param string $symbol
-     * @return array
+     * @return Collection
      */
-    public function get(string $symbol): array
+    public function get(string $symbol): Collection
     {
         return array_filter(
             Positions::where(['user_id' => 1])->get(),

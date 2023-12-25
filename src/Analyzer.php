@@ -97,179 +97,184 @@ class Analyzer
     {
         echo "Started - {$symbol} " . date('Y-m-d H:i:s') . "\n";
 
-        try {
-            $binance = new Binance(PUBLIC_KEY, PRIVATE_KEY);
+        $this->loop->addPeriodicTimer(5, function ($timer) use (&$i, $symbol) {
+            echo "Pending - {$symbol} " . date('Y-m-d H:i:s') . "\n";
 
-            $candles = $binance->getCandles($symbol, '15m', 100);
-            $closes = $binance->getClosePrice($candles);
-            $current = $binance->getCurrentValue($candles, 'close');
+            try {
+                $binance = new Binance(PUBLIC_KEY, PRIVATE_KEY);
 
-            $indicators = [
-                'SMA' => [
-                    7 => new MovingAverageSMA($closes, 7),
-                    25 => new MovingAverageSMA($closes, 25),
-                    99 => new MovingAverageSMA($closes, 99),
-                ]
-            ];
+                $candles = $binance->getCandles($symbol, '15m', 100);
+                $closes = $binance->getClosePrice($candles);
+                $current = $binance->getCurrentValue($candles, 'close');
 
-            $smaSide = '';
-            $smaSide = (new Condition(
-                [
-                    $indicators['SMA'][7],
-                    $indicators['SMA'][25],
-                    $indicators['SMA'][99],
-                ],
-                OperatorInterface::GREATER_EQUAL,
-                $current
-            ))->isSatisfied() ? 'SHORT' : $smaSide;
+                $indicators = [
+                    'SMA' => [
+                        7 => new MovingAverageSMA($closes, 7),
+                        25 => new MovingAverageSMA($closes, 25),
+                        99 => new MovingAverageSMA($closes, 99),
+                    ]
+                ];
 
-            $smaSide = (new Condition(
-                [
-                    $indicators['SMA'][7],
-                    $indicators['SMA'][25],
-                    $indicators['SMA'][99],
-                ],
-                OperatorInterface::LESS_EQUAL,
-                $current
-            ))->isSatisfied() ? 'LONG' : $smaSide;
+                $smaSide = '';
+                $smaSide = (new Condition(
+                    [
+                        $indicators['SMA'][7],
+                        $indicators['SMA'][25],
+                        $indicators['SMA'][99],
+                    ],
+                    OperatorInterface::GREATER_EQUAL,
+                    $current
+                ))->isSatisfied() ? 'SHORT' : $smaSide;
 
-            $stochrsi = new StochasticRSI($closes, 14, 3, 3);
-            $stochSell = 90;
-            $stochBuy = 10;
+                $smaSide = (new Condition(
+                    [
+                        $indicators['SMA'][7],
+                        $indicators['SMA'][25],
+                        $indicators['SMA'][99],
+                    ],
+                    OperatorInterface::LESS_EQUAL,
+                    $current
+                ))->isSatisfied() ? 'LONG' : $smaSide;
 
-            $stochSide = '';
-            $side = '';
+                $stochrsi = new StochasticRSI($closes, 14, 3, 3);
+                $stochSell = 90;
+                $stochBuy = 10;
 
-            $stochSide = (new Condition($stochrsi, OperatorInterface::GREATER_EQUAL, $stochSell))->isSatisfied() ? 'SHORT' : $stochSide;
-            $stochSide = (new Condition($stochrsi, OperatorInterface::LESS_EQUAL, $stochBuy))->isSatisfied() ? 'LONG' : $stochSide;
+                $stochSide = '';
+                $side = '';
 
-            $stochrsi = $stochrsi->getValue();
-            $k = $stochrsi[0];
-            $d = $stochrsi[1];
+                $stochSide = (new Condition($stochrsi, OperatorInterface::GREATER_EQUAL, $stochSell))->isSatisfied() ? 'SHORT' : $stochSide;
+                $stochSide = (new Condition($stochrsi, OperatorInterface::LESS_EQUAL, $stochBuy))->isSatisfied() ? 'LONG' : $stochSide;
 
-            if ($smaSide && !$stochSide) {
-                $side = $smaSide;
-            }
+                $stochrsi = $stochrsi->getValue();
+                $k = $stochrsi[0];
+                $d = $stochrsi[1];
 
-            if ($stochSide && !$smaSide) {
-                $side = $stochSide;
-            }
+                if ($smaSide && !$stochSide) {
+                    $side = $smaSide;
+                }
 
-            if ($stochSide === $smaSide) {
-                $side = $stochSide;
-            }
+                if ($stochSide && !$smaSide) {
+                    $side = $stochSide;
+                }
 
-            printf(
-                "Current: %s | Stoch: %s (k: %s, d: %s) | Sma: %s (7: %s, 25: %s, 99: %s) | Side: %s\n",
-                $current,
-                $stochSide,
-                $k,
-                $d,
-                $smaSide,
-                $indicators['SMA'][7]->getValue()[0],
-                $indicators['SMA'][25]->getValue()[0],
-                $indicators['SMA'][99]->getValue()[0],
-                $side
-            );
+                if ($stochSide === $smaSide) {
+                    $side = $stochSide;
+                }
 
-            $positions = $binance->getPosition($symbol);
-            $book = $binance->getBook($symbol);
-            $bookBuy = $book['bids'][0];
-            $bookSell = $book['asks'][0];
-            $infoPosition = [
-                'LONG' => [
-                    'qty' => 0,
-                    'roi' => 0
-                ],
-                'SHORT' => [
-                    'qty' => 0,
-                    'roi' => 0
-                ]
-            ];
-            $openOrders = $binance->getOpenOrders($symbol);
-            $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
-            $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
+                printf(
+                    "Current: %s | Stoch: %s (k: %s, d: %s) | Sma: %s (7: %s, 25: %s, 99: %s) | Side: %s\n",
+                    $current,
+                    $stochSide,
+                    $k,
+                    $d,
+                    $smaSide,
+                    $indicators['SMA'][7]->getValue()[0],
+                    $indicators['SMA'][25]->getValue()[0],
+                    $indicators['SMA'][99]->getValue()[0],
+                    $side
+                );
 
-            foreach ($positions as $position) {
-                $qty = abs((float) $position['positionAmt']);
+                $positions = $binance->getPosition($symbol);
+                $book = $binance->getBook($symbol);
+                $bookBuy = $book['bids'][0];
+                $bookSell = $book['asks'][0];
+                $infoPosition = [
+                    'LONG' => [
+                        'qty' => 0,
+                        'roi' => 0
+                    ],
+                    'SHORT' => [
+                        'qty' => 0,
+                        'roi' => 0
+                    ]
+                ];
+                $openOrders = $binance->getOpenOrders($symbol);
+                $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
+                $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
 
-                if ($qty > 0) {
-                    if ($position['positionSide'] === 'LONG') {
-                        $infoPosition['LONG'] = [
-                            'qty' => $qty,
-                            'roi' => $binance->percentage((float) $position['markPrice'], (float) $position['entryPrice']) * $position['leverage']
-                        ];
-                    } else {
-                        $infoPosition['SHORT'] = [
-                            'qty' => $qty,
-                            'roi' => $binance->percentage((float) $position['entryPrice'], (float) $position['markPrice']) * $position['leverage']
-                        ];
+                foreach ($positions as $position) {
+                    $qty = abs((float) $position['positionAmt']);
+
+                    if ($qty > 0) {
+                        if ($position['positionSide'] === 'LONG') {
+                            $infoPosition['LONG'] = [
+                                'qty' => $qty,
+                                'roi' => $binance->percentage((float) $position['markPrice'], (float) $position['entryPrice']) * $position['leverage']
+                            ];
+                        } else {
+                            $infoPosition['SHORT'] = [
+                                'qty' => $qty,
+                                'roi' => $binance->percentage((float) $position['entryPrice'], (float) $position['markPrice']) * $position['leverage']
+                            ];
+                        }
+                    }
+
+                    $profit = $infoPosition[$position['positionSide']]['roi'] >= PROFIT;
+
+                    if ($qty > 0 && $profit) {
+                        $diffPrice = $binance->calculeProfit($current, 0.10);
+                        $priceCloseGain = (float) ($position['positionSide'] === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
+                        $priceCloseStopGain = (float) ($position['positionSide'] === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
+                        $sideOrder = $position['positionSide'] === 'SHORT' ? 'BUY' : 'SELL';
+
+                        $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
+
+                        if (!$openOrdersClosed) {
+                            $result1 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseGain);
+                            $result2 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseStopGain, true);
+
+                            echo "Close position - ROI: {$infoPosition[$position['positionSide']]['roi']}\n";
+                        }
                     }
                 }
 
-                $profit = $infoPosition[$position['positionSide']]['roi'] >= PROFIT;
-
-                if ($qty > 0 && $profit) {
-                    $diffPrice = $binance->calculeProfit($current, 0.10);
-                    $priceCloseGain = (float) ($position['positionSide'] === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
-                    $priceCloseStopGain = (float) ($position['positionSide'] === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
-                    $sideOrder = $position['positionSide'] === 'SHORT' ? 'BUY' : 'SELL';
-
-                    $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
-
-                    if (!$openOrdersClosed) {
-                        $result1 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseGain);
-                        $result2 = $binance->closePosition($symbol, $position['positionSide'], $priceCloseStopGain, true);
-
-                        echo "Close position - ROI: {$infoPosition[$position['positionSide']]['roi']}\n";
+                foreach ($openOrders as $openOrder) {
+                    if ($binance->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
+                        $binance->cancelOrder($openOrder['symbol'], $openOrder['orderId']);
+                        echo "timeout\n";
                     }
                 }
-            }
 
-            foreach ($openOrders as $openOrder) {
-                if ($binance->isTimeBoxOrder($openOrder['time'], TIMEOUT)) {
-                    $binance->cancelOrder($openOrder['symbol'], $openOrder['orderId']);
-                    echo "timeout\n";
-                }
-            }
+                if ($side) {
+                    $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] ||$side === 'SHORT' && !$infoPosition['SHORT']['qty'];
 
-            if ($side) {
-                $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] ||$side === 'SHORT' && !$infoPosition['SHORT']['qty'];
+                    $account = $binance->getAccountInformation();
+                    $marginAccount = 100 - $binance->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
 
-                $account = $binance->getAccountInformation();
-                $marginAccount = 100 - $binance->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+                    if (!$openOrders && ($noPosition || $marginAccount <= MARGIN_BALANCE)) {
+                        $price = $bookSell[0];
+                        $sideOrder = 'SELL';
+                        $positionSideOrder = 'SHORT';
 
-                if (!$openOrders && ($noPosition || $marginAccount <= MARGIN_BALANCE)) {
-                    $price = $bookSell[0];
-                    $sideOrder = 'SELL';
-                    $positionSideOrder = 'SHORT';
+                        if ($side === 'LONG') {
+                            $price = $bookBuy[0];
+                            $sideOrder = 'BUY';
+                            $positionSideOrder = 'LONG';
+                        }
 
-                    if ($side === 'LONG') {
-                        $price = $bookBuy[0];
-                        $sideOrder = 'BUY';
-                        $positionSideOrder = 'LONG';
+                        $binance->createOrder([
+                            'symbol' => $symbol,
+                            'side' => $sideOrder,
+                            'positionSide' => $positionSideOrder,
+                            'type' => 'LIMIT',
+                            'timeInForce' => 'GTC',
+                            'quantity' => 0.003,
+                            'price' => (float) $price
+                        ]);
+
+                        echo "Open position\n";
                     }
-
-                    $binance->createOrder([
-                        'symbol' => $symbol,
-                        'side' => $sideOrder,
-                        'positionSide' => $positionSideOrder,
-                        'type' => 'LIMIT',
-                        'timeInForce' => 'GTC',
-                        'quantity' => 0.003,
-                        'price' => (float) $price
-                    ]);
-
-                    echo "Open position\n";
                 }
+            } catch (\Exception $e) {
+                echo "Error: " . $e->getMessage() . "\n";
             }
-        } catch (\Exception $e) {
-            echo "Error: " . $e->getMessage() . "\n";
-        }
 
-        echo "Finished - {$symbol} " . date('Y-m-d H:i:s') . "\n";
-
-        $this->exit();
+            if (++$i >= 45) {
+                $this->loop->cancelTimer($timer);
+                $this->exit();
+            }
+        });
 
         /*
         $this->loop->addPeriodicTimer(1, function ($timer) use (&$i, $symbol) {
@@ -281,8 +286,9 @@ class Analyzer
             }
         });
 
-        $this->loop->run();
         */
+
+        $this->loop->run();
     }
 
     /**

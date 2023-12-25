@@ -120,7 +120,7 @@ class Analyzer
                         $indicators['SMA'][25],
                         $indicators['SMA'][99],
                     ],
-                    OperatorInterface::GREATER_EQUAL,
+                    OperatorInterface::GREATER,
                     $current
                 ))->isSatisfied() ? 'SHORT' : $smaSide;
 
@@ -130,7 +130,7 @@ class Analyzer
                         $indicators['SMA'][25],
                         $indicators['SMA'][99],
                     ],
-                    OperatorInterface::LESS_EQUAL,
+                    OperatorInterface::LESS,
                     $current
                 ))->isSatisfied() ? 'LONG' : $smaSide;
 

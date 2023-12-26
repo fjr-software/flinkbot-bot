@@ -155,11 +155,11 @@ class Analyzer
                 }
             }
 
-            if ($indicators['long']['enable_trade'] && !$indicators['short']['enable_trade']) {
+            if ($indicators['long']['enable_trade']) {
                 $side = 'LONG';
             }
 
-            if (!$indicators['long']['enable_trade'] && $indicators['short']['enable_trade']) {
+            if ($indicators['short']['enable_trade']) {
                 $side = 'SHORT';
             }
 

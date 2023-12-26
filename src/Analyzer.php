@@ -12,7 +12,6 @@ use FjrSoftware\Flinkbot\Bot\Model\Orders;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
-use function strtotime;
 
 class Analyzer
 {
@@ -304,7 +303,7 @@ class Analyzer
         ->first();
 
         if ($order) {
-            return (int) strtotime($order->updated_at);
+            return (int) strtotime((string) $order->updated_at);
         }
 
         return null;

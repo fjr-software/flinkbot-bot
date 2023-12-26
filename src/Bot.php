@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot;
 
+use FjrSoftware\Flinkbot\Bot\Model\Bots;
+
 class Bot
 {
     /**
@@ -87,7 +89,7 @@ class Bot
     {
         $this->processor = new Processor(
             $this->customerId,
-            $this->getData()['customer'][$this->customerId]['bots'],
+            $this->getData(),
             $this->processFile,
             $this->timeout
         );
@@ -100,14 +102,13 @@ class Bot
      */
     private function getData(): array
     {
-        return [
-            'customer' => [
-                1 => [
-                    'bots' => [
-                        1 => ['BTCUSDT'],
-                    ],
-                ],
-            ],
-        ];
+        $bots = Bots::find(['user_id' => $this->customerId]);
+        $symbols = [];
+
+        foreach ($bots as $bot) {
+            $symbols[$bot->symbol->bot_id][] = $bot->symbol->pair;
+        }
+
+        return $symbols;
     }
 }

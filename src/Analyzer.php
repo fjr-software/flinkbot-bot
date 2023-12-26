@@ -245,7 +245,7 @@ class Analyzer
                     if ($symbolConfig) {
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig);
 
-                        if ($lastOrderFilled && $this->bot->getExchange()->isTimeBoxOrder($lastOrderFilled, $this->bot->getConfig()->getPosition()['filledTime'])) {
+                        if ($lastOrderFilled && !$this->bot->getExchange()->isTimeBoxOrder($lastOrderFilled, $this->bot->getConfig()->getPosition()['filledTime'])) {
                             echo "Very close to the last order filled\n";
                         } else {
                             $order = $this->bot->getExchange()->createOrder([

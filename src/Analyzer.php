@@ -163,6 +163,10 @@ class Analyzer
                 $side = 'SHORT';
             }
 
+            if ($indicators['long']['enable_trade'] && $indicators['short']['enable_trade']) {
+                $side = strtoupper($this->bot->getConfig()->getPrioritySideIndicator());
+            }
+
             echo implode(' - ', $debugValues) . " - Side: {$side}\n";
 
             $book = $this->bot->getExchange()->getBook($symbol);

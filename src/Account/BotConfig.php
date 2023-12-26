@@ -29,6 +29,11 @@ class BotConfig
     /**
      * @var string
      */
+    private string $prioritySideIndicator = 'short';
+
+    /**
+     * @var string
+     */
     private string $interval = '15m';
 
     /**
@@ -101,6 +106,29 @@ class BotConfig
     public function getOperationSide(): string
     {
         return $this->operationSide;
+    }
+
+    /**
+     * Set priority side indicator
+     *
+     * @param string $prioritySideIndicator
+     * @return BotConfig
+     */
+    public function setPrioritySideIndicator(string $prioritySideIndicator): BotConfig
+    {
+        $this->prioritySideIndicator = $prioritySideIndicator;
+
+        return $this;
+    }
+
+    /**
+     * Get priority side indicator
+     *
+     * @return string
+     */
+    public function getPrioritySideIndicator(): string
+    {
+        return $this->prioritySideIndicator;
     }
 
     /**
@@ -335,6 +363,7 @@ class BotConfig
         if ($config = json_decode($this->config, true)) {
             $this->setInitialBalance($config['initialBalance'] ?? 0);
             $this->setOperationSide($config['operationSide'] ?? 'both');
+            $this->setPrioritySideIndicator($config['prioritySideIndicator'] ?? 'short');
             $this->setInterval($config['interval'] ?? '15m');
             $this->setOrderTimeout($config['orderTimeout'] ?? 60);
             $this->setMargin($config['margin'] ?? []);

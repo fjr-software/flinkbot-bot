@@ -296,9 +296,9 @@ class Analyzer
     {
         $order = Orders::where([
             'user_id' => $this->bot->getUserId(),
-            'symbol_id' => $symbol->id,
-            'status' => ['NEW','PARTIALLY_FILLED', 'FILLED']
+            'symbol_id' => $symbol->id
         ])
+        ->whereIn('status', ['NEW','PARTIALLY_FILLED', 'FILLED'])
         ->orderBy('updated_at', 'desc')
         ->first();
 
@@ -325,9 +325,10 @@ class Analyzer
         foreach ($symbols as $symbolConfig) {
             $orders = Orders::where([
                 'user_id' => $this->bot->getUserId(),
-                'symbol_id' => $symbolConfig->id,
-                'status' => ['NEW','PARTIALLY_FILLED']
-            ])->get();
+                'symbol_id' => $symbolConfig->id
+            ])
+            ->whereIn('status', ['NEW','PARTIALLY_FILLED'])
+            ->get();
 
             foreach ($orders as $order) {
                 if ($result = $this->bot->getExchange()->getOrderById($order->order_id, $symbolConfig->pair)) {

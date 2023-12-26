@@ -173,8 +173,16 @@ class Analyzer
                 'LONG' => false,
                 'SHORT' => false
             ];
+            $marginAccountPercent = 0;
+            $marginSymbol = [
+                'LONG' => 0,
+                'SHORT' => 0
+            ];
 
             foreach ($this->position->get($symbol) as $position) {
+                $marginAccountPercent = $position->margin_account_percent;
+                $marginSymbol[$position->side] = $position->margin_symbol_percent;
+
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
                 }
@@ -208,10 +216,10 @@ class Analyzer
             }
 
             if ($side) {
-                $account = $this->bot->getExchange()->getAccountInformation();
-                $marginAccount = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+                $limitMargin = $marginAccountPercent <= $this->bot->getConfig()->getMargin()['account']
+                    || $marginSymbol[$side] <= $this->bot->getConfig()->getMargin()['symbol'];
 
-                if (!$openOrders && (!$hasPosition[$side] || $marginAccount <= $this->bot->getConfig()->getMargin()['account'])) {
+                if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {
                     $price = $bookSell[0];
                     $sideOrder = 'SELL';
                     $positionSideOrder = 'SHORT';

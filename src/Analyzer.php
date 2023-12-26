@@ -200,9 +200,10 @@ class Analyzer
 
                 foreach ($this->position->get($symbol) as $position) {
                     if ($position->status === 'open' && $position->pnl_roi_percent >= PROFIT) {
-                        $diffPrice = $this->bot->getExchange()->calculeProfit($current, 0.10);
-                        $priceCloseGain = (float) ($position->side === 'SHORT' ? $current - $diffPrice : $current + $diffPrice);
-                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $current + $diffPrice : $current - $diffPrice);
+                        $markPrice = (float) $position->mark_price;
+                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
+                        $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
                         $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
 
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);

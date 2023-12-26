@@ -264,7 +264,17 @@ class Analyzer
                         echo "Symbol {$symbol} not found\n";
                     }
                 } else {
-                    echo "Without operation\n";
+                    $reason = '';
+
+                    if (!$limitMargin) {
+                        $reason = 'Margin';
+                    }
+
+                    if ($openOrders) {
+                        $reason = 'OpenOrders';
+                    }
+
+                    echo "Without operation[$reason]\n";
                 }
             }
         } catch (Exception $e) {

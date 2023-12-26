@@ -106,7 +106,9 @@ class Bot
         $symbols = [];
 
         foreach ($bots as $bot) {
-            $symbols[$bot->symbol->bot_id][] = $bot->symbol->pair;
+            if ($bot->symbol->status === 'active') {
+                $symbols[$bot->symbol->bot_id][] = $bot->symbol->pair;
+            }
         }
 
         return $symbols;

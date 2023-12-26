@@ -206,8 +206,8 @@ class Analyzer
                     $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
 
                     if (!$openOrdersClosed) {
-                        $result1 = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
-                        $result2 = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                        $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
+                        $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
 
                         echo "Close position - ROI: {$position->pnl_roi_percent}\n";
                     }

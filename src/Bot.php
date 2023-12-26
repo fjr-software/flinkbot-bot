@@ -102,7 +102,7 @@ class Bot
      */
     private function getData(): array
     {
-        $bots = Bots::find(['user_id' => $this->customerId]);
+        $bots = Bots::where(['user_id' => $this->customerId])->get();
         $symbols = [];
 
         foreach ($bots as $bot) {

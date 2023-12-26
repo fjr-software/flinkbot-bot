@@ -52,7 +52,7 @@ class Position
                 Positions::updateOrCreate(
                     [
                         'user_id' => $this->bot->getUserId(),
-                        'symbol_id' => $symbol->id,
+                        'symbol_id' => $symbol->symbol->id,
                         'side' => $position['positionSide']
                     ],
                     [
@@ -78,7 +78,7 @@ class Position
      */
     public function get(string $symbol): array
     {
-        $positions = Positions::find(['user_id' => 1]);
+        $positions = Positions::where(['user_id' => 1])->get();
         $result = [];
 
         foreach ($positions as $position) {

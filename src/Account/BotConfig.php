@@ -236,7 +236,7 @@ class BotConfig
             foreach ($conditionsLong as $condition) {
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['long'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
+                $resultConditions['long'][$indicator] = (new Condition($list, $operator, (float) $value))->isSatisfied();
 
                 if ($countLong === 1) {
                     break;
@@ -246,7 +246,7 @@ class BotConfig
             foreach ($conditionsShort as $condition) {
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['short'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
+                $resultConditions['short'][$indicator] = (new Condition($list, $operator, (float) $value))->isSatisfied();
 
                 if ($countShort === 1) {
                     break;

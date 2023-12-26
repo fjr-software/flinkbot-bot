@@ -12,6 +12,7 @@ use FjrSoftware\Flinkbot\Bot\Model\Orders;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
+use function strtotime;
 
 class Analyzer
 {

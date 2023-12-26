@@ -237,7 +237,7 @@ class Analyzer
                         $positionSideOrder = 'LONG';
                     }
 
-                    $symbolConfig = Symbols::find([
+                    $symbolConfig = Symbols::where([
                         'bot_id' => $this->bot->getId(),
                         'pair' => $symbol,
                         'status' => 'active'

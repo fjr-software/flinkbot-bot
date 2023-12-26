@@ -37,7 +37,7 @@ class Bot
     public function __construct(
         private readonly int $botId
     ) {
-        $this->collection = Bots::find(['id' => $this->botId]);
+        $this->collection = Bots::where(['id' => $this->botId]);
     }
 
     /**

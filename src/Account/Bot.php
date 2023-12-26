@@ -37,7 +37,7 @@ class Bot
     public function __construct(
         private readonly int $botId
     ) {
-        $this->collection = Bots::where('id', $this->botId)->get();
+        $this->collection = Bots::find(['id' => $this->botId]);
     }
 
     /**
@@ -47,7 +47,7 @@ class Bot
      */
     public function getId(): int
     {
-        return $this->collection->id;
+        return $this->getData()->id;
     }
 
     /**
@@ -57,7 +57,7 @@ class Bot
      */
     public function getUserId(): int
     {
-        return $this->collection->user_id;
+        return $this->getData()->user_id;
     }
 
     /**
@@ -67,7 +67,7 @@ class Bot
      */
     public function getName(): string
     {
-        return $this->collection->name;
+        return $this->getData()->name;
     }
 
     /**
@@ -78,9 +78,9 @@ class Bot
      */
     public function getExchange(): ExchangeInterface
     {
-        $exchange = $this->collection->exchange;
+        $exchange = $this->getData()->exchange;
 
-        if (!in_array($exchange, self::EXCHANGES)) {
+        if (!key_exists($exchange, self::EXCHANGES)) {
             throw new LogicException("Exchange {$exchange} not found.");
         }
 
@@ -99,7 +99,7 @@ class Bot
      */
     public function getApiKey(): string
     {
-        return $this->collection->getApiKey();
+        return $this->getData()->getApiKey();
     }
 
     /**
@@ -109,7 +109,7 @@ class Bot
      */
     public function getApiSecret(): string
     {
-        return $this->collection->getApiSecret();
+        return $this->getData()->getApiSecret();
     }
 
     /**
@@ -119,7 +119,7 @@ class Bot
      */
     public function getStatus(): string
     {
-        return $this->collection->status;
+        return $this->getData()->status;
     }
 
     /**
@@ -129,7 +129,7 @@ class Bot
      */
     public function getState(): string
     {
-        return $this->collection->state;
+        return $this->getData()->state;
     }
 
     /**
@@ -139,7 +139,7 @@ class Bot
      */
     public function getConfig(): array
     {
-        return json_decode($this->collection->config, true);
+        return json_decode($this->getData()->config, true);
     }
 
     /**
@@ -149,7 +149,7 @@ class Bot
      */
     public function getDescription(): string
     {
-        return $this->collection->description;
+        return $this->getData()->description;
     }
 
     /**
@@ -159,7 +159,7 @@ class Bot
      */
     public function getCreatedAt(): string
     {
-        return $this->collection->created_at;
+        return $this->getData()->created_at;
     }
 
     /**
@@ -169,6 +169,16 @@ class Bot
      */
     public function getUpdatedAt(): string
     {
-        return $this->collection->updated_at;
+        return $this->getData()->updated_at;
+    }
+
+    /**
+     * Get data
+     *
+     * @return object
+     */
+    private function getData(): object
+    {
+        return $this->collection->first();
     }
 }

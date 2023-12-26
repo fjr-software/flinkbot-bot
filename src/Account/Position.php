@@ -29,7 +29,7 @@ class Position
         $symbols = $this->get($symbol);
 
         foreach ($symbols as $symbol) {
-            $positions = $this->bot->getExchange()->getPosition($symbol->pair);
+            $positions = $this->bot->getExchange()->getPosition($symbol->symbol->pair);
 
             foreach ($positions as $position) {
                 $type = $position['marginType'] === 'cross' ? 'CROSSED' : 'ISOLATED';
@@ -78,7 +78,7 @@ class Position
      */
     public function get(string $symbol): array
     {
-        $positions = Positions::where(['user_id' => 1])->get();
+        $positions = Positions::find(['user_id' => 1]);
         $result = [];
 
         foreach ($positions as $position) {

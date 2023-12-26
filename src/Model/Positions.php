@@ -35,6 +35,11 @@ class Positions extends Model
         'status',
     ];
 
+    /**
+     * Get symbols relation
+     *
+     * @return HasOne
+     */
     public function symbol(): HasOne
     {
         return $this->hasOne(Symbols::class, 'id', 'symbol_id');

@@ -6,7 +6,7 @@ namespace FjrSoftware\Flinkbot\Bot\Model;
 
 use FjrSoftware\Flinkbot\Bot\Security;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Bots extends Model
 {
@@ -20,11 +20,11 @@ class Bots extends Model
     /**
      * Get symbols relation
      *
-     * @return HasOne
+     * @return HasMany
      */
-    public function symbol(): HasOne
+    public function symbol(): HasMany
     {
-        return $this->hasOne(Symbols::class, 'bot_id', 'id');
+        return $this->hasMany(Symbols::class, 'bot_id', 'id');
     }
 
     /**

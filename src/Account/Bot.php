@@ -176,9 +176,16 @@ class Bot
      * Get data
      *
      * @return object
+     * @throws LogicException
      */
     private function getData(): object
     {
-        return $this->collection->first();
+        $data = $this->collection->first();
+
+        if (!$data) {
+            throw new LogicException("Bot {$this->botId} not found.");
+        }
+
+        return $data;
     }
 }

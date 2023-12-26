@@ -239,7 +239,7 @@ class Analyzer
 
                     $symbolConfig = Symbols::find([
                         'bot_id' => $this->bot->getId(),
-                        'symbol' => $symbol,
+                        'pair' => $symbol,
                         'status' => 'active'
                     ])->first();
 

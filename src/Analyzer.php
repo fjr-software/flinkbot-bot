@@ -146,7 +146,7 @@ class Analyzer
             foreach ($indicators as $ind => $val) {
                 if (!in_array($ind, ['long', 'short'])) {
                     $sideInd = $indicators['long'][$ind] ? 'LONG' : '';
-                    $sideInd = $indicators['short'][$ind] ? 'SHORT' : '';
+                    $sideInd = $indicators['short'][$ind] ? 'SHORT' : $sideInd;
                     $debugValues[] = $ind . ':'. $sideInd;
 
                     foreach ($val as $indTmp) {
@@ -359,7 +359,6 @@ class Analyzer
                 'stop_price' => $order['stopPrice'] ? $order['stopPrice'] : null,
                 'close_position' => $order['closePosition'] ? 'true' : 'false',
                 'time_in_force' => $order['timeInForce'],
-                //'order_id' => $order['orderId'],
                 'client_order_id' => $order['clientOrderId'],
                 'status' => $order['status'],
             ]

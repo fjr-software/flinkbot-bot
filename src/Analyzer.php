@@ -186,12 +186,10 @@ class Analyzer
                 $bookSell = $book['asks'][0];
                 $infoPosition = [
                     'LONG' => [
-                        'qty' => 0,
-                        'roi' => 0
+                        'qty' => 0
                     ],
                     'SHORT' => [
-                        'qty' => 0,
-                        'roi' => 0
+                        'qty' => 0
                     ]
                 ];
                 $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
@@ -199,6 +197,16 @@ class Analyzer
                 $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
 
                 foreach ($this->position->get($symbol) as $position) {
+                    if ($position->status === 'open') {
+                        if ($position->side === 'LONG') {
+                            $infoPosition['LONG']['qty'] = $position->size;
+                        }
+
+                        if ($position->side === 'LONG') {
+                            $infoPosition['SHORT']['qty'] = $position->size;
+                        }
+                    }
+
                     if ($position->status === 'open' && $position->pnl_roi_percent >= PROFIT) {
                         $markPrice = (float) $position->mark_price;
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
@@ -225,7 +233,7 @@ class Analyzer
                 }
 
                 if ($side) {
-                    $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] ||$side === 'SHORT' && !$infoPosition['SHORT']['qty'];
+                    $noPosition = $side === 'LONG' && !$infoPosition['LONG']['qty'] || $side === 'SHORT' && !$infoPosition['SHORT']['qty'];
 
                     $account = $this->bot->getExchange()->getAccountInformation();
                     $marginAccount = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
@@ -252,6 +260,8 @@ class Analyzer
                         ]);
 
                         echo "Open position\n";
+                    } else {
+                        echo "Without operation\n";
                     }
                 }
             } catch (\Exception $e) {

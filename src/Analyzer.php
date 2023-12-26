@@ -8,6 +8,7 @@ use Exception;
 use FjrSoftware\Flinkbot\Bot\Account\Bot;
 use FjrSoftware\Flinkbot\Bot\Account\Position;
 use FjrSoftware\Flinkbot\Bot\Model\Symbols;
+use FjrSoftware\Flinkbot\Bot\Model\Orders;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
@@ -132,6 +133,7 @@ class Analyzer
     {
         try {
             $this->position->execute($symbol);
+            $this->updateOrder($symbol);
 
             $candles = $this->bot->getExchange()->getCandles($symbol, $this->bot->getConfig()->getInterval(), 100);
             $closes = $this->bot->getExchange()->getClosePrice($candles);
@@ -237,17 +239,25 @@ class Analyzer
                     ])->first();
 
                     if ($symbolConfig) {
-                        $this->bot->getExchange()->createOrder([
-                            'symbol' => $symbol,
-                            'side' => $sideOrder,
-                            'positionSide' => $positionSideOrder,
-                            'type' => 'LIMIT',
-                            'timeInForce' => 'GTC',
-                            'quantity' => (float) $symbolConfig->base_quantity,
-                            'price' => (float) $price
-                        ]);
+                        $lastOrderFilled = $this->getLastOrderFilled($symbolConfig);
 
-                        echo "Open position\n";
+                        if ($lastOrderFilled && $this->bot->getExchange()->isTimeBoxOrder($lastOrderFilled, $this->bot->getConfig()->getPosition()['filledTime'])) {
+                            echo "Very close to the last order filled\n";
+                        } else {
+                            $order = $this->bot->getExchange()->createOrder([
+                                'symbol' => $symbol,
+                                'side' => $sideOrder,
+                                'positionSide' => $positionSideOrder,
+                                'type' => 'LIMIT',
+                                'timeInForce' => 'GTC',
+                                'quantity' => (float) $symbolConfig->base_quantity,
+                                'price' => (float) $price
+                            ]);
+
+                            $this->updateOrCreateOrder($order);
+
+                            echo "Open position\n";
+                        }
                     } else {
                         echo "Symbol {$symbol} not found\n";
                     }
@@ -258,6 +268,90 @@ class Analyzer
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
         }
+    }
+
+    /**
+     * Get last order filled
+     *
+     * @param object $symbol
+     * @return int
+     */
+    private function getLastOrderFilled(object $symbol): ?int
+    {
+        $order = Orders::where([
+            'user_id' => $this->bot->getUserId(),
+            'symbol_id' => $symbol->id,
+            'status' => ['NEW','PARTIALLY_FILLED', 'FILLED']
+        ])
+        ->orderBy('updated_at', 'desc')
+        ->first();
+
+        if ($order) {
+            return (int) strtotime($order->updated_at);
+        }
+
+        return null;
+    }
+
+    /**
+     * Update information of orders
+     *
+     * @param string $symbol
+     * @return void
+     */
+    private function updateOrder(string $symbol): void
+    {
+        $symbols = Symbols::where([
+            'bot_id' => $this->bot->getId(),
+            'symbol' => $symbol
+        ])->get();
+
+        foreach ($symbols as $symbolConfig) {
+            $orders = Orders::where([
+                'user_id' => $this->bot->getUserId(),
+                'symbol_id' => $symbolConfig->id,
+                'status' => ['NEW','PARTIALLY_FILLED']
+            ])->get();
+
+            foreach ($orders as $order) {
+                if ($result = $this->bot->getExchange()->getOrderById($order->order_id, $symbolConfig->pair)) {
+                    $result['userId'] = $order->user_id;
+                    $result['symbolId'] = $order->symbol_id;
+
+                    $this->updateOrCreateOrder($result);
+                }
+            }
+        }
+    }
+
+    /**
+     * Update or create order
+     *
+     * @param array $data
+     * @return void
+     */
+    private function updateOrCreateOrder(array $order): void
+    {
+        Orders::updateOrCreate(
+            [
+                'order_id' => $order['orderId'],
+            ],
+            [
+                'user_id' => $order['userId'],
+                'symbol_id' => $order['symbolId'],
+                'side' => $order['side'],
+                'position_side' => $order['positionSide'],
+                'type' => $order['origType'],
+                'quantity' => $order['origQty'],
+                'price' => $order['price'],
+                'stop_price' => $order['stopPrice'] ? $order['stopPrice'] : null,
+                'close_position' => $order['closePosition'] ? 'true' : 'false',
+                'time_in_force' => $order['timeInForce'],
+                //'order_id' => $order['orderId'],
+                'client_order_id' => $order['clientOrderId'],
+                'status' => $order['status'],
+            ]
+        );
     }
 
     /**

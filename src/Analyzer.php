@@ -253,6 +253,8 @@ class Analyzer
                                 'quantity' => (float) $symbolConfig->base_quantity,
                                 'price' => (float) $price
                             ]);
+                            $order['userId'] = $this->bot->getUserId();
+                            $order['symbolId'] = $symbolConfig->symbol_id;
 
                             $this->updateOrCreateOrder($order);
 

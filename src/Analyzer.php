@@ -226,7 +226,7 @@ class Analyzer
                         'bot_id' => $this->bot->getId(),
                         'symbol' => $symbol,
                         'status' => 'active'
-                    ]);
+                    ])->first();
 
                     if ($symbolConfig) {
                         $this->bot->getExchange()->createOrder([

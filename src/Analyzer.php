@@ -254,7 +254,7 @@ class Analyzer
                                 'price' => (float) $price
                             ]);
                             $order['userId'] = $this->bot->getUserId();
-                            $order['symbolId'] = $symbolConfig->symbol_id;
+                            $order['symbolId'] = $symbolConfig->id;
 
                             $this->updateOrCreateOrder($order);
 

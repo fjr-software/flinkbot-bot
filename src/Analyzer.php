@@ -303,7 +303,7 @@ class Analyzer
     {
         $symbols = Symbols::where([
             'bot_id' => $this->bot->getId(),
-            'symbol' => $symbol
+            'pair' => $symbol
         ])->get();
 
         foreach ($symbols as $symbolConfig) {

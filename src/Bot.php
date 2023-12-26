@@ -104,28 +104,7 @@ class Bot
             'customer' => [
                 1 => [
                     'bots' => [
-                        1 => ['BTCUSDT', 'BNBUSDT', 'ETHUSDT'],
-                        2 => ['SOLUSDT', 'BTCUSDT', 'ETHUSDT'],
-                    ],
-                ],
-                2 => [
-                    'bots' => [
                         1 => ['BTCUSDT'],
-                    ],
-                ],
-                3 => [
-                    'bots' => [
-                        1 => ['BNBUSDT'],
-                    ],
-                ],
-                4 => [
-                    'bots' => [
-                        1 => ['ETHUSDT'],
-                    ],
-                ],
-                5 => [
-                    'bots' => [
-                        1 => ['SOLUSDT'],
                     ],
                 ],
             ],

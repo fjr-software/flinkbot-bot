@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot;
 
+use DateTime;
 use Exception;
 use FjrSoftware\Flinkbot\Bot\Account\Bot;
 use FjrSoftware\Flinkbot\Bot\Account\Position;
@@ -245,7 +246,7 @@ class Analyzer
                     if ($symbolConfig) {
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig);
 
-                        if ($lastOrderFilled && !$this->bot->getExchange()->isTimeBoxOrder($lastOrderFilled, $this->bot->getConfig()->getPosition()['filledTime'])) {
+                        if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
                             echo "Very close to the last order filled\n";
                         } else {
                             $order = $this->bot->getExchange()->createOrder([
@@ -284,6 +285,24 @@ class Analyzer
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
         }
+    }
+
+    /**
+     * Check if order is time box
+     *
+     * @param int $orderTime
+     * @return bool
+     */
+    private function isTimeBoxOrder(int $orderTime): bool
+    {
+        $timeOrder = new DateTime('@'. $orderTime);
+        $timeNow = new DateTime('now');
+        $time = $timeOrder->diff($timeNow);
+
+        $timeBox = (int) ($time->format('%i')) * 60;
+        $timeBox += (int) ($time->format('%s'));
+
+        return $timeBox >= $this->bot->getConfig()->getPosition()['filledTime'];
     }
 
     /**

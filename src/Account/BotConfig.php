@@ -7,6 +7,7 @@ namespace FjrSoftware\Flinkbot\Bot\Account;
 use FjrSoftware\Flinkbot\Indicator\Condition;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
 use FjrSoftware\Flinkbot\Indicator\StochasticRSI;
+use FjrSoftware\Flinkbot\Indicator\IndicatorInterface;
 
 class BotConfig
 {
@@ -211,9 +212,10 @@ class BotConfig
      * Get indicator
      *
      * @param array $values
+     * @param float $currentValue
      * @return array
      */
-    public function getIndicator(array $values): array
+    public function getIndicator(array $values, float $currentValue = 0): array
     {
         $result = [];
 
@@ -221,7 +223,10 @@ class BotConfig
             $indicatorClass = self::ALLOWED_INDICATORS[$indicator];
 
             foreach ($config as $params) {
-                $result[$indicator][] = new $indicatorClass($values, ...$params);
+                $instance = new $indicatorClass($values, ...$params);
+                $instance->setSymbolPrice($currentValue);
+
+                $result[$indicator][] = $instance;
             }
         }
 

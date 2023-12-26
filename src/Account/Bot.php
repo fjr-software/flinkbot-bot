@@ -135,11 +135,11 @@ class Bot
     /**
      * Get config
      *
-     * @return array
+     * @return BotConfig
      */
-    public function getConfig(): array
+    public function getConfig(): BotConfig
     {
-        return json_decode($this->getData()->config, true);
+        return (new BotConfig($this->getData()->config));
     }
 
     /**

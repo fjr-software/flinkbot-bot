@@ -249,13 +249,17 @@ class Analyzer
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
                             echo "Very close to the last order filled\n";
                         } else {
+                            $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
+                                ? $symbolConfig->min_quantity
+                                : $symbolConfig->base_quantity);
+
                             $order = $this->bot->getExchange()->createOrder([
                                 'symbol' => $symbol,
                                 'side' => $sideOrder,
                                 'positionSide' => $positionSideOrder,
                                 'type' => 'LIMIT',
                                 'timeInForce' => 'GTC',
-                                'quantity' => (float) $symbolConfig->base_quantity,
+                                'quantity' => $quantity,
                                 'price' => (float) $price
                             ]);
                             $order['userId'] = $this->bot->getUserId();

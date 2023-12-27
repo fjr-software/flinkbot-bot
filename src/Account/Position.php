@@ -53,9 +53,21 @@ class Position
                 }
 
                 if ($symbolExchange = $this->getSymbolExchange($symbolInfo->pair)) {
-                    $entryPrice = round((float) $position['entryPrice'], $symbolExchange['pricePrecision']);
-                    $markPrice = round((float) $position['markPrice'], $symbolExchange['pricePrecision']);
-                    $liquidationPrice = round((float) $position['liquidationPrice'], $symbolExchange['pricePrecision']);
+                    $entryPrice = round((float) $position['entryPrice'], (int) $symbolExchange['pricePrecision']);
+                    $markPrice = round((float) $position['markPrice'], (int) $symbolExchange['pricePrecision']);
+                    $liquidationPrice = round((float) $position['liquidationPrice'], (int) $symbolExchange['pricePrecision']);
+
+                    $notional = (float) ($this->getSymbolFilter($symbolExchange['filters'], 'MIN_NOTIONAL')['notional'] ?? 0);
+                    $stepSize = $this->getSymbolFilter($symbolExchange['filters'], 'LOT_SIZE')['stepSize'] ?? 0;
+                    $minQuantity = round($notional / $markPrice, (int) $symbolExchange['quantityPrecision']);
+
+                    while (($minQuantity * $markPrice) < $notional) {
+                        $minQuantity += $stepSize;
+                    }
+
+                    if ($symbolInfo->min_quantity != $minQuantity) {
+                        $this->updateSymbol($symbol, $minQuantity);
+                    }
 
                     $data = [
                         'symbolId' => $symbolInfo->id,
@@ -144,6 +156,23 @@ class Position
     }
 
     /**
+     * Update symbol
+     *
+     * @param string $symbol
+     * @param float $minQuantity
+     * @return object|null
+     */
+    public function updateSymbol(string $symbol, float $minQuantity): void
+    {
+        Symbols::where([
+            'bot_id' => $this->bot->getId(),
+            'pair' => $symbol,
+        ])->update([
+            'min_quantity' => $minQuantity
+        ]);
+    }
+
+    /**
      * Get symbol exchange
      *
      * @param string $symbol
@@ -156,6 +185,24 @@ class Position
 
         if ($symbolInfo) {
             return current($symbolInfo);
+        }
+
+        return [];
+    }
+
+    /**
+     * Get symbol filter
+     *
+     * @param array $symbolInfo
+     * @param string $type
+     * @return array
+     */
+    private function getSymbolFilter(array $filters, string $type): array
+    {
+        $filters = array_filter($filters, fn($filter) => $filter['filterType'] === $type);
+
+        if ($filters) {
+            return current($filters);
         }
 
         return [];

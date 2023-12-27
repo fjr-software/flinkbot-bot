@@ -14,4 +14,18 @@ class Symbols extends Model
      * @var string
      */
     protected $table = 'symbols';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'bot_id',
+        'pair',
+        'leverage',
+        'status',
+        'base_quantity',
+        'min_quantity',
+    ];
 }

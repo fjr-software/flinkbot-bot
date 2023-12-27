@@ -189,12 +189,15 @@ class Analyzer
             foreach ($this->position->get($symbol) as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
                 $marginSymbol[$position->side] = $position->margin_symbol_percent;
+                $configPosition = $this->bot->getConfig()->getPosition();
+                $canPositionGain = $position->pnl_roi_percent >= $configPosition['profit']
+                    && $position->pnl_roi_value >= $configPosition['minimumGain'];
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
                 }
 
-                if ($position->status === 'open' && $position->pnl_roi_percent >= $this->bot->getConfig()->getPosition()['profit']) {
+                if ($position->status === 'open' && $canPositionGain) {
                     $markPrice = (float) $position->mark_price;
                     $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
                     $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);

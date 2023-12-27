@@ -53,38 +53,45 @@ class Position
                 }
 
                 if ($symbolExchange = $this->getSymbolExchange($symbolInfo->pair)) {
-                    $entryPrice = round((float) $position['entryPrice'], (int) $symbolExchange['pricePrecision']);
-                    $markPrice = round((float) $position['markPrice'], (int) $symbolExchange['pricePrecision']);
-                    $liquidationPrice = round((float) $position['liquidationPrice'], (int) $symbolExchange['pricePrecision']);
-
-                    $notional = (float) ($this->getSymbolFilter($symbolExchange['filters'], 'MIN_NOTIONAL')['notional'] ?? 0);
-                    $stepSize = $this->getSymbolFilter($symbolExchange['filters'], 'LOT_SIZE')['stepSize'] ?? 0;
-                    $minQuantity = round($notional / $markPrice, (int) $symbolExchange['quantityPrecision']);
-
-                    while (($minQuantity * $markPrice) < $notional) {
-                        $minQuantity += $stepSize;
+                    if (empty($position['markPrice'])) {
+                        $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbolInfo->pair);
+                        $position['markPrice'] = $staticsTicker['lastPrice'] ?? 0;
                     }
 
-                    if ($symbolInfo->min_quantity != $minQuantity) {
-                        $this->updateSymbol($symbol, $minQuantity);
+                    if ($position['markPrice']) {
+                        $entryPrice = round((float) $position['entryPrice'], (int) $symbolExchange['pricePrecision']);
+                        $markPrice = round((float) $position['markPrice'], (int) $symbolExchange['pricePrecision']);
+                        $liquidationPrice = round((float) $position['liquidationPrice'], (int) $symbolExchange['pricePrecision']);
+
+                        $notional = (float) ($this->getSymbolFilter($symbolExchange['filters'], 'MIN_NOTIONAL')['notional'] ?? 0);
+                        $stepSize = $this->getSymbolFilter($symbolExchange['filters'], 'LOT_SIZE')['stepSize'] ?? 0;
+                        $minQuantity = round($notional / $markPrice, (int) $symbolExchange['quantityPrecision']);
+
+                        while (($minQuantity * $markPrice) < $notional) {
+                            $minQuantity += $stepSize;
+                        }
+
+                        if ($symbolInfo->min_quantity != $minQuantity) {
+                            $this->updateSymbol($symbol, $minQuantity);
+                        }
+
+                        $data = [
+                            'symbolId' => $symbolInfo->id,
+                            'side' => $position['positionSide'],
+                            'entryPrice' => $entryPrice,
+                            'size' => $size,
+                            'roiPercent' => $roiPercent,
+                            'unRealizedProfit' => (float) $position['unRealizedProfit'],
+                            'marginAccountPercent' => $marginAccountPercent,
+                            'marginSymbolPercent' => $marginSymbolPercent,
+                            'markPrice' => $markPrice,
+                            'liquidationPrice' => $liquidationPrice,
+                            'type' => $type,
+                            'status' => $status,
+                        ];
+
+                        $this->updateOrCreate($data);
                     }
-
-                    $data = [
-                        'symbolId' => $symbolInfo->id,
-                        'side' => $position['positionSide'],
-                        'entryPrice' => $entryPrice,
-                        'size' => $size,
-                        'roiPercent' => $roiPercent,
-                        'unRealizedProfit' => (float) $position['unRealizedProfit'],
-                        'marginAccountPercent' => $marginAccountPercent,
-                        'marginSymbolPercent' => $marginSymbolPercent,
-                        'markPrice' => $markPrice,
-                        'liquidationPrice' => $liquidationPrice,
-                        'type' => $type,
-                        'status' => $status,
-                    ];
-
-                    $this->updateOrCreate($data);
                 }
             }
         }

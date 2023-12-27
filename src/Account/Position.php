@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
+use FjrSoftware\Flinkbot\Bot\Model\Symbols;
 
 class Position
 {
@@ -26,11 +27,9 @@ class Position
      */
     public function execute(string $symbol): void
     {
-        $symbols = $this->get($symbol);
-
-        foreach ($symbols as $symbol) {
+        if ($symbolInfo = $this->getSymbol($symbol)) {
             $account = $this->bot->getExchange()->getAccountInformation();
-            $positions = $this->bot->getExchange()->getPosition($symbol->symbol->pair);
+            $positions = $this->bot->getExchange()->getPosition($symbolInfo->pair);
             $marginAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
 
             foreach ($positions as $position) {
@@ -54,25 +53,22 @@ class Position
                     $roiPercent = $this->bot->getExchange()->percentage($value1, $value2) * $position['leverage'];
                 }
 
-                Positions::updateOrCreate(
-                    [
-                        'user_id' => $this->bot->getUserId(),
-                        'symbol_id' => $symbol->symbol->id,
-                        'side' => $position['positionSide']
-                    ],
-                    [
-                        'entry_price' => (float) $position['entryPrice'],
-                        'size' => $size,
-                        'pnl_roi_percent' => $roiPercent,
-                        'pnl_roi_value' => (float) $position['unRealizedProfit'],
-                        'margin_account_percent' => $marginAccountPercent,
-                        'margin_symbol_percent' => $marginSymbolPercent,
-                        'mark_price' => (float) $position['markPrice'],
-                        'liquid_price' => (float) $position['liquidationPrice'],
-                        'margin_type' => $type,
-                        'status' => $status,
-                    ]
-                );
+                $data = [
+                    'symbolId' => $symbolInfo->id,
+                    'side' => $position['positionSide'],
+                    'entryPrice' => (float) $position['entryPrice'],
+                    'size' => $size,
+                    'roiPercent' => $roiPercent,
+                    'unRealizedProfit' => (float) $position['unRealizedProfit'],
+                    'marginAccountPercent' => $marginAccountPercent,
+                    'marginSymbolPercent' => $marginSymbolPercent,
+                    'markPrice' => (float) $position['markPrice'],
+                    'liquidationPrice' => (float) $position['liquidationPrice'],
+                    'type' => $type,
+                    'status' => $status,
+                ];
+
+                $this->updateOrCreate($data);
             }
         }
     }
@@ -85,7 +81,7 @@ class Position
      */
     public function get(string $symbol): array
     {
-        $positions = Positions::where(['user_id' => 1])->get();
+        $positions = Positions::where(['user_id' => $this->bot->getUserId()])->get();
         $result = [];
 
         foreach ($positions as $position) {
@@ -95,5 +91,50 @@ class Position
         }
 
         return $result;
+    }
+
+    /**
+     * Get symbol
+     *
+     * @param string $symbol
+     * @return object|null
+     */
+    public function getSymbol(string $symbol): ?object
+    {
+        $data = Symbols::where([
+            'bot_id' => $this->bot->getId(),
+            'pair' => $symbol
+        ])->first();
+
+        return $data ?? null;
+    }
+
+    /**
+     * Update or create
+     *
+     * @param array $data
+     * @return void
+     */
+    private function updateOrCreate(array $data): void
+    {
+        Positions::updateOrCreate(
+            [
+                'user_id' => $this->bot->getUserId(),
+                'symbol_id' => $data['symbolId'],
+                'side' => $data['positionSide']
+            ],
+            [
+                'entry_price' => (float) $data['entryPrice'],
+                'size' => $data['size'],
+                'pnl_roi_percent' => $data['roiPercent'],
+                'pnl_roi_value' => (float) $data['unRealizedProfit'],
+                'margin_account_percent' => $data['marginAccountPercent'],
+                'margin_symbol_percent' => $data['marginSymbolPercent'],
+                'mark_price' => (float) $data['markPrice'],
+                'liquid_price' => (float) $data['liquidationPrice'],
+                'margin_type' => $data['type'],
+                'status' => $data['status'],
+            ]
+        );
     }
 }

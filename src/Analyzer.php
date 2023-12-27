@@ -202,8 +202,13 @@ class Analyzer
                     $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
 
                     $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
-                    $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
-                    $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
+                    $exchangeInfo = $this->bot->getExchange()->getExchangeInfo();
+                    $symbolInfo = array_filter($exchangeInfo['symbols'], fn($info) => $info['symbol'] === $symbol);
+
+                    if ($symbolInfo) {
+                        $priceCloseGain = round($priceCloseGain, current($symbolInfo)['pricePrecision']);
+                        $priceCloseStopGain = round($priceCloseStopGain, current($symbolInfo)['pricePrecision']);
+                    }
 
                     if (!$openOrdersClosed) {
                         $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);

@@ -37,6 +37,6 @@ class Symbols extends Model
      */
     public function order(): HasMany
     {
-        return $this->hasMany(Orders::class, 'id', 'symbol_id');
+        return $this->hasMany(Orders::class, 'symbol_id', 'id');
     }
 }

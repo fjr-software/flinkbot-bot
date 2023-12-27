@@ -428,8 +428,13 @@ class Analyzer
 
         foreach ($orders as $order) {
             if ($result = $this->bot->getExchange()->getOrderById($order->order_id, $symbolConfig->pair)) {
+                $realizedPnl = $this->bot->getExchange()->getRealizedPnl($symbolConfig->pair, $order->order_id);
+
                 $result['userId'] = $order->user_id;
                 $result['symbolId'] = $order->symbol_id;
+                $result['pnl_close'] = $realizedPnl['close'];
+                $result['pnl_commission'] = $realizedPnl['commission'];
+                $result['pnl_realized'] = $realizedPnl['realized'];
 
                 $this->updateOrCreateOrder($result);
             }
@@ -455,6 +460,9 @@ class Analyzer
                 'position_side' => $order['positionSide'],
                 'type' => $order['origType'],
                 'quantity' => $order['origQty'],
+                'pnl_close' => $order['pnl_close'] ?  $order['pnl_close'] : null,
+                'pnl_commission' => $order['pnl_commission'] ? $order['pnl_commission'] : null,
+                'pnl_realized' => $order['pnl_realized'] ? $order['pnl_realized'] : null,
                 'price' => $order['price'],
                 'stop_price' => $order['stopPrice'] ? $order['stopPrice'] : null,
                 'close_position' => $order['closePosition'] ? 'true' : 'false',

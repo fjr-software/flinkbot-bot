@@ -302,8 +302,7 @@ class Analyzer
                     $reason = '';
 
                     if (!$limitMargin) {
-                        $typeMarginLimit = !$limitMarginAccount ? 'account' : 'symbol';
-                        $reason = "margin[{$typeMarginLimit}]";
+                        $reason = !$limitMarginAccount ? 'marginAccount' : 'marginSymbol';
                     }
 
                     if ($openOrders) {

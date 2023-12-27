@@ -11,10 +11,10 @@ class Log
     /**
      * Constructor
      *
-     * @param Bot $bot
+     * @param int $botId
      */
     public function __construct(
-        private readonly Bot $bot
+        private readonly int $botId
     ) {
     }
 
@@ -28,7 +28,7 @@ class Log
     public function register(LogLevel $level, string $message): void
     {
         BotLogs::create([
-            'bot_id' => $this->bot->getId(),
+            'bot_id' => $this->botId,
             'level' => $level,
             'message' => $message
         ]);

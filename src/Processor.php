@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot;
 
+use FjrSoftware\Flinkbot\Bot\Account\Log;
+use FjrSoftware\Flinkbot\Bot\Account\LogLevel;
 use React\ChildProcess\Process;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
@@ -193,11 +195,17 @@ class Processor
      */
     private function retrySymbol(int $botId, string $symbol): Process
     {
+        $log = new Log($botId);
         $process = new Process($this->buildCommand($botId, $symbol));
 
-        $timer = $this->loop->addTimer($this->timeout, function () use ($process, $botId, $symbol) {
+        $timer = $this->loop->addTimer($this->timeout, function () use ($process, $botId, $symbol, $log) {
             if (!$process->isRunning()) {
-                echo "STOP FINISHED-{$this->customerId}-{$botId}-{$symbol}\n";
+                $message = "STOP FINISHED-{$this->customerId}-{$botId}-{$symbol}";
+
+                $log->register(LogLevel::LEVEL_INFO, $message);
+
+                echo "$message\n";
+
                 return;
             }
 
@@ -213,27 +221,44 @@ class Processor
 
             $process->terminate($exitCode);
 
-            echo "TIMEOUT-{$this->customerId}-{$botId}-{$symbol}\n";
+            $message = "TIMEOUT-{$this->customerId}-{$botId}-{$symbol}";
+
+            $log->register(LogLevel::LEVEL_WARNING, $message);
+
+            echo "$message\n";
         });
 
         $this->retrys[$botId][$symbol] = $this->retrys[$botId][$symbol] ?? 0;
 
-        $this->loop->futureTick(function () use ($process, $botId, $symbol, &$timer) {
+        $this->loop->futureTick(function () use ($process, $botId, $symbol, &$timer, $log) {
             $process->start($this->loop);
 
-            $process->on('exit', function (?int $exitCode = null, ?int $termSignal = null) use ($process, $botId, $symbol, &$timer) {
+            $process->on('exit', function (?int $exitCode = null, ?int $termSignal = null) use ($process, $botId, $symbol, &$timer, $log) {
                 $exitCode = $exitCode ?? $termSignal;
 
                 switch (true) {
                     case $exitCode === Analyzer::RESULT_DEFAULT:
                     case $exitCode === Analyzer::RESULT_SUCCESS:
-                        echo "Bot-{$this->customerId}-{$botId}-{$symbol} - finished\n";
+                        $message = "Bot-{$this->customerId}-{$botId}-{$symbol} - finished";
+
+                        $log->register(LogLevel::LEVEL_INFO, $message);
+
+                        echo "$message\n";
+
                         break;
                     case $exitCode === Analyzer::RESULT_CLOSED:
-                        echo "Bot-{$this->customerId}-{$botId}-{$symbol} - closed\n";
+                        $message = "Bot-{$this->customerId}-{$botId}-{$symbol} - closed";
+
+                        $log->register(LogLevel::LEVEL_INFO, $message);
+
+                        echo "$message\n";
                         break;
                     case $exitCode === Analyzer::RESULT_CLOSED_TIMEOUT:
-                        echo "Bot-{$this->customerId}-{$botId}-{$symbol} - finished timeout\n";
+                        $message = "Bot-{$this->customerId}-{$botId}-{$symbol} - finished timeout";
+
+                        $log->register(LogLevel::LEVEL_WARNING, $message);
+
+                        echo "$message\n";
                         break;
                     default:
                         if ($exitCode !== Analyzer::RESULT_RESTART) {
@@ -241,15 +266,23 @@ class Processor
                         }
 
                         if ($this->retrys[$botId][$symbol] >= self::MAX_RETRY) {
-                            echo "Tentativas maximas Bot-{$this->customerId}-{$botId}-{$symbol}\n";
+                            $message = "Maximum attempts bot-{$this->customerId}-{$botId}-{$symbol}";
+
+                            $log->register(LogLevel::LEVEL_WARNING, $message);
+
+                            echo "$message\n";
                         } else {
-                            $mgs = 'Iniciando Bot';
+                            $mgs = 'Starting bot';
 
                             if ($exitCode !== Analyzer::RESULT_RESTART) {
-                                $mgs = 'Erro ao processar Bot';
+                                $mgs = 'Error processing bot';
                             }
 
-                            echo "{$mgs}-{$this->customerId}-{$botId}-{$symbol} - {$exitCode}:{$termSignal}\n";
+                            $message = "{$mgs}-{$this->customerId}-{$botId}-{$symbol} - {$exitCode}:{$termSignal}";
+
+                            $log->register(LogLevel::LEVEL_INFO, $message);
+
+                            echo "$message\n";
 
                             $this->loop->futureTick(function () use ($botId, $symbol) {
                                 $this->process[$botId][$symbol] = $this->retrySymbol($botId, $symbol);
@@ -262,18 +295,26 @@ class Processor
                 $process->close();
             });
 
-            $process->stdout->on('data', function ($output) use ($botId, $symbol) {
+            $process->stdout->on('data', function ($output) use ($botId, $symbol, $log) {
                 $outputTmp = explode("\n", $output);
                 $outputTmp = implode("\n\t", $outputTmp);
 
-                echo "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}\n";
+                $message = "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}";
+
+                $log->register(LogLevel::LEVEL_INFO, $message);
+
+                echo "$message\n";
             });
 
-            $process->stderr->on('data', function ($output) use ($botId, $symbol) {
+            $process->stderr->on('data', function ($output) use ($botId, $symbol, $log) {
                 $outputTmp = explode("\n", $output);
                 $outputTmp = implode("\n\t", $outputTmp);
 
-                echo "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}\n";
+                $message = "Bot-{$this->customerId}-{$botId}-{$symbol} - output:\n\t{$outputTmp}";
+
+                $log->register(LogLevel::LEVEL_ERROR, $message);
+
+                echo "$message\n";
             });
         });
 

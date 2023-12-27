@@ -94,7 +94,7 @@ class Analyzer
     ) {
         $this->bot = new Bot($this->botId);
         $this->position = new Position($this->bot);
-        $this->log = new Log($this->bot);
+        $this->log = new Log($botId);
         $this->loop = Loop::get();
 
         $this->start();

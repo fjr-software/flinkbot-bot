@@ -39,7 +39,12 @@ class BotConfig
     /**
      * @var int
      */
-    private int $orderTimeout = 60;
+    private int $orderCommonTimeout = 60;
+
+    /**
+     * @var int
+     */
+    private int $orderTriggerTimeout = 60;
 
     /**
      * @var array
@@ -155,26 +160,49 @@ class BotConfig
     }
 
     /**
-     * Set order timeout
+     * Set order common timeout
      *
-     * @param int $orderTimeout
+     * @param int $orderCommonTimeout
      * @return BotConfig
      */
-    public function setOrderTimeout(int $orderTimeout): BotConfig
+    public function setOrderCommonTimeout(int $orderCommonTimeout): BotConfig
     {
-        $this->orderTimeout = $orderTimeout;
+        $this->orderCommonTimeout = $orderCommonTimeout;
 
         return $this;
     }
 
     /**
-     * Get order timeout
+     * Get order common timeout
      *
      * @return int
      */
-    public function getOrderTimeout(): int
+    public function getOrderCommonTimeout(): int
     {
-        return $this->orderTimeout;
+        return $this->orderCommonTimeout;
+    }
+
+    /**
+     * Set order trigger timeout
+     *
+     * @param int $orderTriggerTimeout
+     * @return BotConfig
+     */
+    public function setOrderTriggerTimeout(int $orderTriggerTimeout): BotConfig
+    {
+        $this->orderTriggerTimeout = $orderTriggerTimeout;
+
+        return $this;
+    }
+
+    /**
+     * Get order trigger timeout
+     *
+     * @return int
+     */
+    public function getOrderTriggerTimeout(): int
+    {
+        return $this->orderTriggerTimeout;
     }
 
     /**
@@ -365,7 +393,8 @@ class BotConfig
             $this->setOperationSide($config['operationSide'] ?? 'both');
             $this->setPrioritySideIndicator($config['prioritySideIndicator'] ?? 'short');
             $this->setInterval($config['interval'] ?? '15m');
-            $this->setOrderTimeout($config['orderTimeout'] ?? 60);
+            $this->setOrderCommonTimeout($config['orderCommonTimeout'] ?? 60);
+            $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
             $this->setMargin($config['margin'] ?? []);
             $this->setPosition($config['position'] ?? []);
             $this->setIndicator($config['indicator'] ?? []);

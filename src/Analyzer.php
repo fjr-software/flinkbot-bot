@@ -190,47 +190,60 @@ class Analyzer
                 $marginAccountPercent = $position->margin_account_percent;
                 $marginSymbol[$position->side] = $position->margin_symbol_percent;
                 $configPosition = $this->bot->getConfig()->getPosition();
-                $canPositionGain = $position->pnl_roi_percent >= $configPosition['profit']
+                $canPositionGain = $configPosition['profit'] > 0
+                    && $position->pnl_roi_percent >= $configPosition['profit']
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
+                $canPositionLoss = $configPosition['loss'] > 0
+                    && abs((float) $position->pnl_roi_percent) >= $configPosition['loss']
+                    && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
-                }
 
-                if ($position->status === 'open' && $canPositionGain) {
-                    $markPrice = (float) $position->mark_price;
-                    $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
-                    $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
-                    $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
-                    $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
+                    if ($canPositionGain || $canPositionLoss) {
+                        $markPrice = (float) $position->mark_price;
+                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
+                        $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
+                        $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
+                        $typeClosed = $canPositionGain ? 'profit' : 'loss';
 
-                    $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
-                    $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
-                    $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
+                        $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
+                        $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
+                        $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
 
-                    if (!$openOrdersClosed) {
-                        $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
-                        $orderProfit['userId'] = $this->bot->getUserId();
-                        $orderProfit['symbolId'] = $position->symbol->id;
+                        if (!$openOrdersClosed) {
+                            $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
+                            $orderProfit['userId'] = $this->bot->getUserId();
+                            $orderProfit['symbolId'] = $position->symbol->id;
 
-                        $this->updateOrCreateOrder($orderProfit);
+                            $this->updateOrCreateOrder($orderProfit);
 
-                        $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
-                        $orderStop['userId'] = $this->bot->getUserId();
-                        $orderStop['symbolId'] = $position->symbol->id;
+                            $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                            $orderStop['userId'] = $this->bot->getUserId();
+                            $orderStop['symbolId'] = $position->symbol->id;
 
-                        $this->updateOrCreateOrder($orderStop);
+                            $this->updateOrCreateOrder($orderStop);
 
-                        echo "Close position - ROI: {$position->pnl_roi_percent}\n";
+                            echo "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}\n";
+                        }
                     }
                 }
             }
 
             foreach ($openOrders as $openOrder) {
-                if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTimeout())) {
+                if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderCommonTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                    echo "timeout\n";
+                    echo "order timeout[common]\n";
+                }
+            }
+
+            foreach ($openOrdersClosed as $openOrder) {
+                if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
+                    $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                    echo "order timeout[trigger]\n";
                 }
             }
 

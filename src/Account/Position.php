@@ -53,9 +53,11 @@ class Position
                 }
 
                 if ($symbolExchange = $this->getSymbolExchange($symbolInfo->pair)) {
-                    if (empty($position['markPrice'])) {
+                    $position['markPrice'] = (float) $position['markPrice'];
+
+                    if (!$position['markPrice']) {
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbolInfo->pair);
-                        $position['markPrice'] = $staticsTicker['lastPrice'] ?? 0;
+                        $position['markPrice'] = (float) ($staticsTicker['lastPrice'] ?? 0);
                     }
 
                     if ($position['markPrice']) {

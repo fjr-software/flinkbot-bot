@@ -105,11 +105,7 @@ class Analyzer
      */
     public function __destruct()
     {
-        $message = 'Finished';
-
-        $this->log->register(LogLevel::LEVEL_INFO, $message);
-
-        echo "{$message} - " . date('Y-m-d H:i:s') . "\n";
+        echo "Finished - " . date('Y-m-d H:i:s') . "\n";
     }
 
     /**
@@ -468,11 +464,7 @@ class Analyzer
      */
     private function start(): void
     {
-        $message = 'Started';
-
-        $this->log->register(LogLevel::LEVEL_INFO, $message);
-
-        echo "{$message} - " . date('Y-m-d H:i:s') . "\n";
+        echo "Started - " . date('Y-m-d H:i:s') . "\n";
 
         $this->stream = new ReadableResourceStream(STDIN);
         $this->stream->on('data', function (mixed $chunk) {

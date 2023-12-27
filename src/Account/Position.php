@@ -33,11 +33,10 @@ class Position
             $marginAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
 
             foreach ($positions as $position) {
-                $marginSymbol = abs((float) $position['notional']) / $position['leverage'];
-                $marginSymbolPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], (float) $marginSymbol);
-
-                $type = $position['marginType'] === 'cross' ? 'CROSSED' : 'ISOLATED';
                 $size = abs((float) $position['positionAmt']);
+                $type = $position['marginType'] === 'cross' ? 'CROSSED' : 'ISOLATED';
+                $marginSymbol = abs((float) $position['notional']) / $position['leverage'];
+                $marginSymbolPercent = $size ? (100 - $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], (float) $marginSymbol)) : 0;
                 $status = $size > 0 ? 'open' : 'closed';
                 $roiPercent = 0;
 

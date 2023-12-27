@@ -121,7 +121,7 @@ class Position
             [
                 'user_id' => $this->bot->getUserId(),
                 'symbol_id' => $data['symbolId'],
-                'side' => $data['positionSide']
+                'side' => $data['side']
             ],
             [
                 'entry_price' => (float) $data['entryPrice'],

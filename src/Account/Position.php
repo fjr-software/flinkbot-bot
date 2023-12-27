@@ -52,22 +52,28 @@ class Position
                     $roiPercent = $this->bot->getExchange()->percentage($value1, $value2) * $position['leverage'];
                 }
 
-                $data = [
-                    'symbolId' => $symbolInfo->id,
-                    'side' => $position['positionSide'],
-                    'entryPrice' => (float) $position['entryPrice'],
-                    'size' => $size,
-                    'roiPercent' => $roiPercent,
-                    'unRealizedProfit' => (float) $position['unRealizedProfit'],
-                    'marginAccountPercent' => $marginAccountPercent,
-                    'marginSymbolPercent' => $marginSymbolPercent,
-                    'markPrice' => (float) $position['markPrice'],
-                    'liquidationPrice' => (float) $position['liquidationPrice'],
-                    'type' => $type,
-                    'status' => $status,
-                ];
+                if ($symbolExchange = $this->getSymbolExchange($symbolInfo->pair)) {
+                    $entryPrice = round((float) $position['entryPrice'], $symbolExchange['pricePrecision']);
+                    $markPrice = round((float) $position['markPrice'], $symbolExchange['pricePrecision']);
+                    $liquidationPrice = round((float) $position['liquidationPrice'], $symbolExchange['pricePrecision']);
 
-                $this->updateOrCreate($data);
+                    $data = [
+                        'symbolId' => $symbolInfo->id,
+                        'side' => $position['positionSide'],
+                        'entryPrice' => $entryPrice,
+                        'size' => $size,
+                        'roiPercent' => $roiPercent,
+                        'unRealizedProfit' => (float) $position['unRealizedProfit'],
+                        'marginAccountPercent' => $marginAccountPercent,
+                        'marginSymbolPercent' => $marginSymbolPercent,
+                        'markPrice' => $markPrice,
+                        'liquidationPrice' => $liquidationPrice,
+                        'type' => $type,
+                        'status' => $status,
+                    ];
+
+                    $this->updateOrCreate($data);
+                }
             }
         }
     }
@@ -135,5 +141,23 @@ class Position
                 'status' => $data['status'],
             ]
         );
+    }
+
+    /**
+     * Get symbol exchange
+     *
+     * @param string $symbol
+     * @return array
+     */
+    private function getSymbolExchange(string $symbol): array
+    {
+        $exchangeInfo = $this->bot->getExchange()->getExchangeInfo();
+        $symbolInfo = array_filter($exchangeInfo['symbols'], fn($info) => $info['symbol'] === $symbol);
+
+        if ($symbolInfo) {
+            return current($symbolInfo);
+        }
+
+        return [];
     }
 }

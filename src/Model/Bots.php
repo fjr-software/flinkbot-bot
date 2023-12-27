@@ -18,6 +18,23 @@ class Bots extends Model
     protected $table = 'bots';
 
     /**
+     * The attributes that are mass assignable
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'user_id',
+        'name',
+        'exchange',
+        'api_key',
+        'api_secret',
+        'status',
+        'state',
+        'config',
+        'description',
+    ];
+
+    /**
      * Get symbols relation
      *
      * @return HasMany

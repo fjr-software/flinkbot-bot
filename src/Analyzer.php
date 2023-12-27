@@ -7,6 +7,8 @@ namespace FjrSoftware\Flinkbot\Bot;
 use DateTime;
 use Exception;
 use FjrSoftware\Flinkbot\Bot\Account\Bot;
+use FjrSoftware\Flinkbot\Bot\Account\Log;
+use FjrSoftware\Flinkbot\Bot\Account\LogLevel;
 use FjrSoftware\Flinkbot\Bot\Account\Position;
 use FjrSoftware\Flinkbot\Bot\Model\Symbols;
 use FjrSoftware\Flinkbot\Bot\Model\Orders;
@@ -58,11 +60,6 @@ class Analyzer
     private int $exitCode = self::RESULT_RESTART;
 
     /**
-     * @var LoopInterfacee|null
-     */
-    private ?LoopInterface $loop = null;
-
-    /**
      * @var ReadableResourceStream|null
      */
     private ?ReadableResourceStream $stream = null;
@@ -78,6 +75,16 @@ class Analyzer
     private Position $position;
 
     /**
+     * @var Log
+     */
+    private Log $log;
+
+    /**
+     * @var LoopInterfacee|null
+     */
+    private ?LoopInterface $loop = null;
+
+    /**
      * Constructor
      *
      * @param int $botId
@@ -87,6 +94,7 @@ class Analyzer
     ) {
         $this->bot = new Bot($this->botId);
         $this->position = new Position($this->bot);
+        $this->log = new Log($this->bot);
         $this->loop = Loop::get();
 
         $this->start();
@@ -97,7 +105,11 @@ class Analyzer
      */
     public function __destruct()
     {
-        echo "Finished - " . date('Y-m-d H:i:s') . "\n";
+        $message = 'Finished';
+
+        $this->log->register(LogLevel::LEVEL_INFO, $message);
+
+        echo "{$message} - " . date('Y-m-d H:i:s') . "\n";
     }
 
     /**
@@ -168,7 +180,11 @@ class Analyzer
                 $side = strtoupper($this->bot->getConfig()->getPrioritySideIndicator());
             }
 
-            echo implode(' - ', $debugValues) . " - Side: {$side}\n";
+            $message = implode(' - ', $debugValues) . " - Side: {$side}";
+
+            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+            echo "{$message}\n";
 
             $book = $this->bot->getExchange()->getBook($symbol);
             $bookBuy = $book['bids'][0];
@@ -225,7 +241,11 @@ class Analyzer
 
                             $this->updateOrCreateOrder($orderStop);
 
-                            echo "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}\n";
+                            $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}";
+
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
                         }
                     }
                 }
@@ -235,7 +255,11 @@ class Analyzer
                 if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderCommonTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                    echo "order timeout[common]\n";
+                    $message = 'Order timeout[common]';
+
+                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                    echo "{$message}\n";
                 }
             }
 
@@ -243,7 +267,11 @@ class Analyzer
                 if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                    echo "order timeout[trigger]\n";
+                    $message = 'Order timeout[trigger]';
+
+                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                    echo "{$message}\n";
                 }
             }
 
@@ -273,7 +301,11 @@ class Analyzer
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig);
 
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
-                            echo "Very close to the last order filled\n";
+                            $message = 'Very close to the last order filled';
+
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
                         } else {
                             $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
                                 ? $symbolConfig->min_quantity
@@ -293,10 +325,18 @@ class Analyzer
 
                             $this->updateOrCreateOrder($order);
 
-                            echo "Open position\n";
+                            $message = 'Open position';
+
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
                         }
                     } else {
-                        echo "Symbol {$symbol} not found\n";
+                        $message = "Symbol {$symbol} not found";
+
+                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                        echo "{$message}\n";
                     }
                 } else {
                     $reason = '';
@@ -309,7 +349,11 @@ class Analyzer
                         $reason = 'openOrders';
                     }
 
-                    echo "Without operation[$reason]\n";
+                    $message = "Without operation[$reason]";
+
+                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                    echo "{$message}\n";
                 }
             }
         } catch (Exception $e) {
@@ -424,7 +468,11 @@ class Analyzer
      */
     private function start(): void
     {
-        echo "Started - " . date('Y-m-d H:i:s') . "\n";
+        $message = 'Started';
+
+        $this->log->register(LogLevel::LEVEL_INFO, $message);
+
+        echo "{$message} - " . date('Y-m-d H:i:s') . "\n";
 
         $this->stream = new ReadableResourceStream(STDIN);
         $this->stream->on('data', function (mixed $chunk) {

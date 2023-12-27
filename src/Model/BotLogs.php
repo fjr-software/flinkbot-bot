@@ -14,4 +14,15 @@ class BotLogs extends Model
      * @var string
      */
     protected $table = 'bot_logs';
+
+    /**
+     * The attributes that are mass assignable
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'bot_id',
+        'level',
+        'message',
+    ];
 }

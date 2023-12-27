@@ -17,7 +17,7 @@ class Positions extends Model
     protected $table = 'positions';
 
     /**
-     * The attributes that are mass assignable.
+     * The attributes that are mass assignable
      *
      * @var array
      */

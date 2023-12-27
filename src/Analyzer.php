@@ -248,8 +248,9 @@ class Analyzer
             }
 
             if ($side) {
-                $limitMargin = $marginAccountPercent <= $this->bot->getConfig()->getMargin()['account']
-                    || $marginSymbol[$side] <= $this->bot->getConfig()->getMargin()['symbol'];
+                $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
+                $limitMarginSymbol = $marginSymbol[$side] < $this->bot->getConfig()->getMargin()['symbol'];
+                $limitMargin = $limitMarginAccount && $limitMarginSymbol;
 
                 if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {
                     $price = $bookSell[0];
@@ -301,11 +302,12 @@ class Analyzer
                     $reason = '';
 
                     if (!$limitMargin) {
-                        $reason = 'Margin';
+                        $typeMarginLimit = !$limitMarginAccount ? 'account' : 'symbol';
+                        $reason = "margin[{$typeMarginLimit}]";
                     }
 
                     if ($openOrders) {
-                        $reason = 'OpenOrders';
+                        $reason = 'openOrders';
                     }
 
                     echo "Without operation[$reason]\n";

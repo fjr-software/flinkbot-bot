@@ -364,7 +364,7 @@ class Analyzer
                         $reason = 'openOrders';
                     }
 
-                    $message = "Without operation[$reason]";
+                    $message = "Without {$side} operation[$reason]";
 
                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

@@ -284,7 +284,7 @@ class Processor
 
                             echo "$message\n";
 
-                            $this->loop->futureTick(function () use ($botId, $symbol) {
+                            $this->loop->addTimer(5, function () use ($botId, $symbol) {
                                 $this->process[$botId][$symbol] = $this->retrySymbol($botId, $symbol);
                             });
                         }

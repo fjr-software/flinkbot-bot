@@ -316,7 +316,7 @@ class Analyzer
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
 
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
-                            $message = 'Very close to the last order filled';
+                            $message = "Recently closed {$side} order";
 
                             $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

@@ -313,7 +313,7 @@ class Analyzer
                     ])->first();
 
                     if ($symbolConfig) {
-                        $lastOrderFilled = $this->getLastOrderFilled($symbolConfig);
+                        $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
 
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
                             $message = 'Very close to the last order filled';
@@ -398,13 +398,15 @@ class Analyzer
      * Get last order filled
      *
      * @param object $symbol
+     * @param string $positionSide
      * @return int
      */
-    private function getLastOrderFilled(object $symbol): ?int
+    private function getLastOrderFilled(object $symbol, string $positionSide): ?int
     {
         $order = Orders::where([
             'user_id' => $this->bot->getUserId(),
-            'symbol_id' => $symbol->id
+            'symbol_id' => $symbol->id,
+            'position_side' => $positionSide
         ])
         ->whereIn('status', ['NEW','PARTIALLY_FILLED', 'FILLED'])
         ->orderBy('updated_at', 'desc')

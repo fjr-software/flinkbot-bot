@@ -196,6 +196,7 @@ class Analyzer
             $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
             $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
             $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
+            $canGainLoss = false;
             $hasPosition = [
                 'LONG' => false,
                 'SHORT' => false
@@ -234,6 +235,7 @@ class Analyzer
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
                         $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
+                        $canGainLoss = true;
 
                         if (!$openOrdersClosed) {
                             $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
@@ -270,15 +272,17 @@ class Analyzer
                 }
             }
 
-            foreach ($openOrdersClosed as $openOrder) {
-                if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
-                    $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+            if ($canGainLoss) {
+                foreach ($openOrdersClosed as $openOrder) {
+                    if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
+                        $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                    $message = 'Order timeout[trigger]';
+                        $message = 'Order timeout[trigger]';
 
-                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                    echo "{$message}\n";
+                        echo "{$message}\n";
+                    }
                 }
             }
 

@@ -222,9 +222,12 @@ class Analyzer
 
                     if ($canPositionGain || $canPositionLoss) {
                         $markPrice = (float) $position->mark_price;
+                        $entryPrice = (float) $position->entry_price;
+
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                         $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
+                        $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
                         $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
                         $typeClosed = $canPositionGain ? 'profit' : 'loss';
 

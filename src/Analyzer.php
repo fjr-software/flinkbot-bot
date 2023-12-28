@@ -228,7 +228,11 @@ class Analyzer
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                         $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
-                        $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
+
+                        if ($this->bot->getConfig()->getEnableHalfPriceProtection()) {
+                            $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
+                        }
+
                         $sideOrder = $position->side === 'SHORT' ? 'BUY' : 'SELL';
                         $typeClosed = $canPositionGain ? 'profit' : 'loss';
 

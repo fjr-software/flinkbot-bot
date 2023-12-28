@@ -47,6 +47,11 @@ class BotConfig
     private int $orderTriggerTimeout = 60;
 
     /**
+     * @var bool
+     */
+    private bool $enableHalfPriceProtection = false;
+
+    /**
      * @var array
      */
     private array $margin = [];
@@ -203,6 +208,29 @@ class BotConfig
     public function getOrderTriggerTimeout(): int
     {
         return $this->orderTriggerTimeout;
+    }
+
+    /**
+     * Set enable half price protection
+     *
+     * @param bool $enableHalfPriceProtection
+     * @return BotConfig
+     */
+    public function setEnableHalfPriceProtection(bool $enableHalfPriceProtection): BotConfig
+    {
+        $this->enableHalfPriceProtection = $enableHalfPriceProtection;
+
+        return $this;
+    }
+
+    /**
+     * Get enable half price protection
+     *
+     * @return bool
+     */
+    public function getEnableHalfPriceProtection(): bool
+    {
+        return $this->enableHalfPriceProtection;
     }
 
     /**
@@ -395,6 +423,7 @@ class BotConfig
             $this->setInterval($config['interval'] ?? '15m');
             $this->setOrderCommonTimeout($config['orderCommonTimeout'] ?? 60);
             $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
+            $this->setEnableHalfPriceProtection($config['enableHalfPriceProtection'] ?? false);
             $this->setMargin($config['margin'] ?? []);
             $this->setPosition($config['position'] ?? []);
             $this->setIndicator($config['indicator'] ?? []);

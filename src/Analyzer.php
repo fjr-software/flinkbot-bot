@@ -126,15 +126,7 @@ class Analyzer
     {
         $this->loop->futureTick(function () use ($symbol) {
             $this->runAnalyzer($symbol);
-
-            $this->loop->addPeriodicTimer(5, function ($timer) use (&$i, $symbol) {
-                $this->runAnalyzer($symbol);
-
-                if (++$i >= 2) {
-                    $this->loop->cancelTimer($timer);
-                    $this->exit();
-                }
-            });
+            $this->exit();
         });
 
         $this->loop->run();

@@ -263,6 +263,8 @@ class Processor
                     default:
                         if ($exitCode !== Analyzer::RESULT_RESTART) {
                             $this->retrys[$botId][$symbol]++;
+                        } else {
+                            $this->retrys[$botId][$symbol] = 0;
                         }
 
                         if ($this->retrys[$botId][$symbol] >= self::MAX_RETRY) {
@@ -284,7 +286,7 @@ class Processor
 
                             echo "$message\n";
 
-                            $this->loop->addTimer(5, function () use ($botId, $symbol) {
+                            $this->loop->futureTick(function () use ($botId, $symbol) {
                                 $this->process[$botId][$symbol] = $this->retrySymbol($botId, $symbol);
                             });
                         }

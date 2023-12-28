@@ -222,7 +222,10 @@ class Analyzer
                     $hasPosition[$position->side] = true;
 
                     if ($canPositionGain || $canPositionLoss) {
-                        $markPrice = (float) $position->mark_price;
+                        $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
+                        $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
+
+                        $markPrice = (float) ($markPrice ?? $position->mark_price);
                         $entryPrice = (float) $position->entry_price;
 
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);

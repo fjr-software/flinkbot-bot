@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use FjrSoftware\Flinkbot\Indicator\Condition;
+use FjrSoftware\Flinkbot\Indicator\MovingAverageEMA;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
 use FjrSoftware\Flinkbot\Indicator\StochasticRSI;
 use FjrSoftware\Flinkbot\Indicator\IndicatorInterface;
@@ -12,6 +13,7 @@ use FjrSoftware\Flinkbot\Indicator\IndicatorInterface;
 class BotConfig
 {
     public const ALLOWED_INDICATORS = [
+        'MovingAverageEMA' => MovingAverageEMA::class,
         'MovingAverageSMA' => MovingAverageSMA::class,
         'StochasticRSI' => StochasticRSI::class,
     ];

@@ -322,25 +322,23 @@ class BotConfig
             $countLong = count($conditionsLong);
             $countShort = count($conditionsLong);
 
-            foreach ($conditionsLong as $condition) {
+            foreach ($conditionsLong as $conditionKey => $condition) {
+                $indicatorList = $countLong === 1 ? $list : $list[$conditionKey];
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['long'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
-
-                if ($countLong === 1) {
-                    break;
-                }
+                $resultConditions['long'][$indicator][] = (new Condition($indicatorList, $operator, $value))->isSatisfied();
             }
 
-            foreach ($conditionsShort as $condition) {
+            $resultConditions['long'][$indicator] = !in_array(false, $resultConditions['long'][$indicator], true);
+
+            foreach ($conditionsShort as $conditionKey => $condition) {
+                $indicatorList = $countShort === 1 ? $list : $list[$conditionKey];
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['short'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
-
-                if ($countShort === 1) {
-                    break;
-                }
+                $resultConditions['short'][$indicator][] = (new Condition($indicatorList, $operator, $value))->isSatisfied();
             }
+
+            $resultConditions['short'][$indicator] = !in_array(false, $resultConditions['short'][$indicator], true);
         }
 
         switch ($this->indicator['conditions']['when']) {

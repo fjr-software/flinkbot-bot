@@ -325,7 +325,7 @@ class BotConfig
             foreach ($conditionsLong as $condition) {
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['long'][$indicator] = (new Condition($list, $operator, (float) $value))->isSatisfied();
+                $resultConditions['long'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
 
                 if ($countLong === 1) {
                     break;
@@ -335,7 +335,7 @@ class BotConfig
             foreach ($conditionsShort as $condition) {
                 $value = $this->getValue((string) $condition['condition']['value'], $list);
                 $operator = $condition['condition']['operator'];
-                $resultConditions['short'][$indicator] = (new Condition($list, $operator, (float) $value))->isSatisfied();
+                $resultConditions['short'][$indicator] = (new Condition($list, $operator, $value))->isSatisfied();
 
                 if ($countShort === 1) {
                     break;
@@ -402,8 +402,16 @@ class BotConfig
      */
     private function getValue(string $value, array $indicators): mixed
     {
+        if (!preg_match('/^@/', $value)) {
+            return $value;
+        }
+
         if ($value === '@SYMBOL_PRICE') {
             return $indicators[0]->getSymbolPrice();
+        }
+
+        if (preg_match('/@INDICATOR\_(?<name>[a-z]+)\_(?<key>[0-9]+)/i', $value, $match)) {
+            return $indicators[$match['key']]->getValue();
         }
 
         return $value;

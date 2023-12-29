@@ -24,6 +24,7 @@ class Positions extends Model
     protected $fillable = [
         'user_id',
         'symbol_id',
+        'leverage',
         'side',
         'entry_price',
         'size',

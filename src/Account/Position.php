@@ -79,6 +79,7 @@ class Position
 
                         $data = [
                             'symbolId' => $symbolInfo->id,
+                            'leverage' => (int) $position['leverage'],
                             'side' => $position['positionSide'],
                             'entryPrice' => $entryPrice,
                             'size' => $size,
@@ -150,6 +151,7 @@ class Position
                 'side' => $data['side']
             ],
             [
+                'leverage' => $data['leverage'],
                 'entry_price' => (float) $data['entryPrice'],
                 'size' => $data['size'],
                 'pnl_roi_percent' => $data['roiPercent'],

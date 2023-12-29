@@ -242,8 +242,8 @@ class Analyzer
 
                         if (!$openOrdersClosed) {
                             if ($canPrevent) {
-                                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) ($configPosition['profit'] / $position->leverage));
-                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                                $diffPrice = $this->bot->getExchange()->calculeProfit($entryPrice, (float) ($configPosition['profit'] / $position->leverage));
+                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $entryPrice - $diffPrice : $entryPrice + $diffPrice);
                                 $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                                 $typeClosed = 'prevent';
                             }

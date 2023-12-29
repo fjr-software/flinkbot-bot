@@ -28,6 +28,11 @@ class Processor
     public const STATUS_STOP = 'stop';
 
     /**
+     * @const string
+     */
+    public const STATUS_ERROR = 'error';
+
+    /**
      * @var LoopInterface|null
      */
     private ?LoopInterface $loop = null;
@@ -104,6 +109,27 @@ class Processor
         }
 
         return $this->endTime - $this->startTime;
+    }
+
+    /**
+     * Restart
+     *
+     * @return void
+     */
+    public function restart(): void
+    {
+        foreach ($this->bots as $botId => $symbols) {
+            $symbolsRestart = array_filter($symbols, fn($symbol) => $this->status[$botId][$symbol] === self::STATUS_ERROR);
+
+            if ($symbolsRestart) {
+                $message = "RESTART SYMBOLS-{$this->customerId}-{$botId}";
+
+                $log = new Log($botId);
+                $log->register(LogLevel::LEVEL_INFO, $message);
+            }
+
+            $this->processBot($botId, $symbolsRestart);
+        }
     }
 
     /**
@@ -268,6 +294,7 @@ class Processor
                         }
 
                         if ($this->retrys[$botId][$symbol] >= self::MAX_RETRY) {
+                            $this->status[$botId][$symbol] = self::STATUS_ERROR;
                             $message = "Maximum attempts bot-{$this->customerId}-{$botId}-{$symbol}";
 
                             $log->register(LogLevel::LEVEL_WARNING, $message);

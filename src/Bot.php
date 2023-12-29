@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot;
 
 use FjrSoftware\Flinkbot\Bot\Model\Bots;
+use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 
 class Bot
 {
@@ -12,6 +14,11 @@ class Bot
      * @var Processor
      */
     private Processor $processor;
+
+    /**
+     * @var LoopInterface|null
+     */
+    private ?LoopInterface $loop = null;
 
     /**
      * @var bool
@@ -30,6 +37,7 @@ class Bot
         private readonly string $processFile,
         private readonly int $timeout
     ) {
+        $this->loop = Loop::get();
         $this->load();
     }
 
@@ -53,6 +61,9 @@ class Bot
         if (!$this->isRunning) {
             $this->isRunning = true;
             $this->processor->process();
+
+            $this->loop->addPeriodicTimer($this->timeout, fn() => $this->processor->restart());
+            $this->loop->run();
         }
     }
 

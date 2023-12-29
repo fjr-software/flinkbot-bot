@@ -403,7 +403,7 @@ class BotConfig
     private function getValue(string $value, array $indicators): mixed
     {
         if (!preg_match('/^@/', $value)) {
-            return $value;
+            return (float) $value;
         }
 
         if ($value === '@SYMBOL_PRICE') {

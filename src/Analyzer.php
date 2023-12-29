@@ -209,11 +209,14 @@ class Analyzer
                 $canPositionLoss = $configPosition['loss'] > 0
                     && abs((float) $position->pnl_roi_percent) >= $configPosition['loss']
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
+                $canPrevent = $configPosition['profit'] > 0
+                    && !$canPositionGain && !$canPositionLoss
+                    && $position->pnl_roi_value >= $configPosition['minimumGain'];
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
 
-                    if ($canPositionGain || $canPositionLoss) {
+                    if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
                         $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
 
@@ -237,17 +240,26 @@ class Analyzer
                         $canGainLoss = true;
 
                         if (!$openOrdersClosed) {
+                            if ($canPrevent) {
+                                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) ($configPosition['profit'] / $position->leverage) + 0.10);
+                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                                $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
+                                $typeClosed = 'prevent';
+                            }
+
                             $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
                             $orderProfit['userId'] = $this->bot->getUserId();
                             $orderProfit['symbolId'] = $position->symbol->id;
 
                             $this->updateOrCreateOrder($orderProfit);
 
-                            $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
-                            $orderStop['userId'] = $this->bot->getUserId();
-                            $orderStop['symbolId'] = $position->symbol->id;
+                            if (!$canPrevent) {
+                                $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                                $orderStop['userId'] = $this->bot->getUserId();
+                                $orderStop['symbolId'] = $position->symbol->id;
 
-                            $this->updateOrCreateOrder($orderStop);
+                                $this->updateOrCreateOrder($orderStop);
+                            }
 
                             $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}";
 

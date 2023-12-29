@@ -247,7 +247,8 @@ class Analyzer
                                     $entryPrice,
                                     (float) ($configPosition['profit'] / $position->leverage) + $this->bot->getConfig()->getIncrementTriggerPercentage()
                                 );
-                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $entryPrice - $diffPrice : $entryPrice + $diffPrice);
+                                $avgEntryMarkGain = ($entryPrice + $markPrice) / 2;
+                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);
                                 $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                                 $typeClosed = 'prevent';
                             }

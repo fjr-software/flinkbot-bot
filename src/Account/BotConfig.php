@@ -436,6 +436,24 @@ class BotConfig
             return $indicators[0]->getSymbolPrice();
         }
 
+        if (preg_match('/@SYMBOL_PRICE@ADD_PERC_(?<value>[0-9\.]+)/i', $value, $match)) {
+            $value = $indicators[0]->getSymbolPrice();
+            $valueAdd = (float) ($match['value'] ?? 0) / 100;
+            $valueAdd = $value * $valueAdd;
+            $value += $valueAdd;
+
+            return $value;
+        }
+
+        if (preg_match('/@SYMBOL_PRICE@SUB_PERC_(?<value>[0-9\.]+)/i', $value, $match)) {
+            $value = $indicators[0]->getSymbolPrice();
+            $valueSub = (float) ($match['value'] ?? 0) / 100;
+            $valueAdd = $value * $valueSub;
+            $value -= $valueSub;
+
+            return $value;
+        }
+
         if (preg_match('/@INDICATOR\_(?<name>[a-z]+)\_(?<key>[0-9]+)/i', $value, $match)) {
             return $indicators[$match['key']]->getValue();
         }

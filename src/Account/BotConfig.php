@@ -448,7 +448,7 @@ class BotConfig
         if (preg_match('/@SYMBOL_PRICE@SUB_PERC_(?<value>[0-9\.]+)/i', $value, $match)) {
             $value = $indicators[0]->getSymbolPrice();
             $valueSub = (float) ($match['value'] ?? 0) / 100;
-            $valueAdd = $value * $valueSub;
+            $valueSub = $value * $valueSub;
             $value -= $valueSub;
 
             return $value;

@@ -224,7 +224,7 @@ class Analyzer
                         $markPrice = (float) ($markPrice ?? $position->mark_price);
                         $entryPrice = (float) $position->entry_price;
 
-                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, 0.10);
+                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $this->bot->getConfig()->getIncrementTriggerPercentage());
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                         $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
 
@@ -242,7 +242,7 @@ class Analyzer
 
                         if (!$openOrdersClosed) {
                             if ($canPrevent) {
-                                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) ($configPosition['profit'] / $position->leverage) + 0.10);
+                                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) ($configPosition['profit'] / $position->leverage));
                                 $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                                 $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                                 $typeClosed = 'prevent';

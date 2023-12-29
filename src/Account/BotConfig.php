@@ -52,6 +52,11 @@ class BotConfig
     private bool $enableHalfPriceProtection = false;
 
     /**
+     * @var float
+     */
+    private float $incrementTriggerPercentage = 0.0;
+
+    /**
      * @var array
      */
     private array $margin = [];
@@ -231,6 +236,29 @@ class BotConfig
     public function getEnableHalfPriceProtection(): bool
     {
         return $this->enableHalfPriceProtection;
+    }
+
+    /**
+     * Set increment trigger percentage
+     *
+     * @param float $incrementTriggerPercentage
+     * @return BotConfig
+     */
+    public function setIncrementTriggerPercentage(float $incrementTriggerPercentage): BotConfig
+    {
+        $this->incrementTriggerPercentage = $incrementTriggerPercentage;
+
+        return $this;
+    }
+
+    /**
+     * Get increment trigger percentage
+     *
+     * @return float
+     */
+    public function getIncrementTriggerPercentage(): float
+    {
+        return $this->incrementTriggerPercentage;
     }
 
     /**
@@ -430,6 +458,7 @@ class BotConfig
             $this->setOrderCommonTimeout($config['orderCommonTimeout'] ?? 60);
             $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
             $this->setEnableHalfPriceProtection($config['enableHalfPriceProtection'] ?? false);
+            $this->setIncrementTriggerPercentage($config['incrementTriggerPercentage'] ?? 0.0);
             $this->setMargin($config['margin'] ?? []);
             $this->setPosition($config['position'] ?? []);
             $this->setIndicator($config['indicator'] ?? []);

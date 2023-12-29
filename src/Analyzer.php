@@ -211,7 +211,7 @@ class Analyzer
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
                 $canPrevent = $configPosition['profit'] > 0
                     && !$canPositionGain && !$canPositionLoss
-                    && $position->pnl_roi_percent >= ($configPosition['profit'] / 2)
+                    && $position->pnl_roi_percent >= ($configPosition['profit'] / 4)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
 
                 if ($position->status === 'open') {
@@ -242,8 +242,8 @@ class Analyzer
 
                         if (!$openOrdersClosed) {
                             if ($canPrevent) {
-                                $diffPrice = $this->bot->getExchange()->calculeProfit($entryPrice, (float) ($configPosition['profit'] / $position->leverage));
-                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $entryPrice - $diffPrice : $entryPrice + $diffPrice);
+                                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) ($configPosition['profit'] / $position->leverage) + 0.10);
+                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                                 $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                                 $typeClosed = 'prevent';
                             }

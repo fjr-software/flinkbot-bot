@@ -35,7 +35,7 @@ class Processor
     /**
      * @var LoopInterface|null
      */
-    private ?LoopInterface $loop = null;
+    public ?LoopInterface $loop = null;
 
     /**
      * @var float|null

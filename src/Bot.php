@@ -59,11 +59,13 @@ class Bot
     public function run(): void
     {
         if (!$this->isRunning) {
+            $this->processor->loop->addPeriodicTimer(
+                $this->timeout,
+                fn() => $this->processor->restart()
+            );
+
             $this->isRunning = true;
             $this->processor->process();
-
-            $this->loop->addPeriodicTimer($this->timeout, fn() => $this->processor->restart());
-            $this->loop->run();
         }
     }
 

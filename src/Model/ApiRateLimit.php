@@ -21,7 +21,7 @@ class ApiRateLimit extends Model
      * @var array
      */
     protected $fillable = [
-        'request_ip',
+        'ip',
         'country',
         'exchange',
         'request_count',

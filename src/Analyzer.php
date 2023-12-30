@@ -431,7 +431,8 @@ class Analyzer
         $order = Orders::where([
             'user_id' => $this->bot->getUserId(),
             'symbol_id' => $symbol->id,
-            'position_side' => $positionSide
+            'position_side' => $positionSide,
+            'type' => 'LIMIT'
         ])
         ->whereIn('status', ['NEW','PARTIALLY_FILLED', 'FILLED'])
         ->orderBy('updated_at', 'desc')

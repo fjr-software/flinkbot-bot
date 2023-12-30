@@ -59,6 +59,11 @@ class BotConfig
     private float $incrementTriggerPercentage = 0.0;
 
     /**
+     * @var int
+     */
+    private int $averagePriceOrderCount = 0;
+
+    /**
      * @var array
      */
     private array $margin = [];
@@ -261,6 +266,29 @@ class BotConfig
     public function getIncrementTriggerPercentage(): float
     {
         return $this->incrementTriggerPercentage;
+    }
+
+    /**
+     * Set average price order count
+     *
+     * @param int $averagePriceOrderCount
+     * @return BotConfig
+     */
+    public function setAveragePriceOrderCount(int $averagePriceOrderCount): BotConfig
+    {
+        $this->averagePriceOrderCount = $averagePriceOrderCount;
+
+        return $this;
+    }
+
+    /**
+     * Get average price order count
+     *
+     * @return int
+     */
+    public function getAveragePriceOrderCount(): int
+    {
+        return $this->averagePriceOrderCount;
     }
 
     /**
@@ -479,6 +507,7 @@ class BotConfig
             $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
             $this->setEnableHalfPriceProtection($config['enableHalfPriceProtection'] ?? false);
             $this->setIncrementTriggerPercentage($config['incrementTriggerPercentage'] ?? 0.0);
+            $this->setAveragePriceOrderCount($config['averagePriceOrderCount'] ?? 0);
             $this->setMargin($config['margin'] ?? []);
             $this->setPosition($config['position'] ?? []);
             $this->setIndicator($config['indicator'] ?? []);

@@ -347,29 +347,45 @@ class Analyzer
 
                             echo "{$message}\n";
                         } else {
-                            $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
-                                ? $symbolConfig->min_quantity
-                                : $symbolConfig->base_quantity);
+                            $enableTradeAvg = true;
 
-                            $order = $this->bot->getExchange()->createOrder([
-                                'symbol' => $symbol,
-                                'side' => $sideOrder,
-                                'positionSide' => $positionSideOrder,
-                                'type' => 'LIMIT',
-                                'timeInForce' => 'GTC',
-                                'quantity' => $quantity,
-                                'price' => (float) $price
-                            ]);
-                            $order['userId'] = $this->bot->getUserId();
-                            $order['symbolId'] = $symbolConfig->id;
+                            if ($avgPriceOrder = $this->getAvgOrdersFilled($symbolConfig, $positionSideOrder)) {
+                                $enableTradeAvg = $positionSideOrder === 'LONG'
+                                    ? $price < $avgPriceOrder
+                                    : $price > $avgPriceOrder;
+                            }
 
-                            $this->updateOrCreateOrder($order);
+                            if ($enableTradeAvg) {
+                                $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
+                                    ? $symbolConfig->min_quantity
+                                    : $symbolConfig->base_quantity);
 
-                            $message = 'Open position';
+                                $order = $this->bot->getExchange()->createOrder([
+                                    'symbol' => $symbol,
+                                    'side' => $sideOrder,
+                                    'positionSide' => $positionSideOrder,
+                                    'type' => 'LIMIT',
+                                    'timeInForce' => 'GTC',
+                                    'quantity' => $quantity,
+                                    'price' => (float) $price
+                                ]);
+                                $order['userId'] = $this->bot->getUserId();
+                                $order['symbolId'] = $symbolConfig->id;
 
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                $this->updateOrCreateOrder($order);
 
-                            echo "{$message}\n";
+                                $message = 'Open position';
+
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                echo "{$message}\n";
+                            } else {
+                                $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
+
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                echo "{$message}\n";
+                            }
                         }
                     } else {
                         $message = "Symbol {$symbol} not found";
@@ -443,6 +459,39 @@ class Analyzer
         }
 
         return null;
+    }
+
+    /**
+     * Get average orders filled
+     *
+     * @param object $symbol
+     * @param string $positionSide
+     * @return float
+     */
+    private function getAvgOrdersFilled(object $symbol, string $positionSide): float
+    {
+        if ($limit = $this->bot->getConfig()->getAveragePriceOrderCount()) {
+            $orders = Orders::where([
+                'user_id' => $this->bot->getUserId(),
+                'symbol_id' => $symbol->id,
+                'position_side' => $positionSide,
+                'type' => 'LIMIT'
+            ])
+            ->whereIn('status', ['FILLED'])
+            ->orderBy('updated_at', 'desc')
+            ->take($limit)
+            ->get();
+
+            $avgPrice = 0;
+
+            foreach ($orders as $order) {
+                $avgPrice += $order->price;
+            }
+
+            return $avgPrice > 0 ? $avgPrice / $limit : 0;
+        }
+
+        return 0;
     }
 
     /**

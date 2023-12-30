@@ -380,6 +380,7 @@ class Analyzer
 
                                 echo "{$message}\n";
                             } else {
+                                $price = $this->bot->getExchange()->formatDecimal((float) $price, $avgPriceOrder);
                                 $avgPriceOrder = $this->bot->getExchange()->formatDecimal((float) $price, $avgPriceOrder);
                                 $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
 

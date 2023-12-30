@@ -173,7 +173,19 @@ class Analyzer
             }
 
             if ($indicators['long']['enable_trade'] && $indicators['short']['enable_trade']) {
-                $side = strtoupper($this->bot->getConfig()->getPrioritySideIndicator());
+                $prioritySideIndicator = strtoupper($this->bot->getConfig()->getPrioritySideIndicator());
+
+                if (in_array($prioritySideIndicator, ['LONG', 'SHORT'])) {
+                    $side = $prioritySideIndicator;
+                } else {
+                    if ($indicators['long'][$this->bot->getConfig()->getPrioritySideIndicator()] ?? false) {
+                        $side = 'LONG';
+                    }
+
+                    if ($indicators['short'][$this->bot->getConfig()->getPrioritySideIndicator()] ?? false) {
+                        $side = 'SHORT';
+                    }
+                }
             }
 
             $message = implode(' - ', $debugValues) . " - Side: {$side}";

@@ -495,7 +495,7 @@ class Analyzer
                 $avgPrice += $order->price;
             }
 
-            return $avgPrice > 0 ? $avgPrice / $limit : 0;
+            return $avgPrice > 0 ? $avgPrice / count($orders) : 0;
         }
 
         return 0;

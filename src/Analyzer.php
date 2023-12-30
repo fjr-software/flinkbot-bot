@@ -471,12 +471,19 @@ class Analyzer
     private function getAvgOrdersFilled(object $symbol, string $positionSide): float
     {
         if ($limit = $this->bot->getConfig()->getAveragePriceOrderCount()) {
+            $interval = str_replace(
+                ['m', 'h', 'd'],
+                [' minute', ' hour', ' day'],
+                $this->bot->getConfig()->getInterval()
+            );
+
             $orders = Orders::where([
                 'user_id' => $this->bot->getUserId(),
                 'symbol_id' => $symbol->id,
                 'position_side' => $positionSide,
                 'type' => 'LIMIT'
             ])
+            ->where('updated_at', '>=', date('Y-m-d H:i:s', strtotime("- {$interval}")))
             ->whereIn('status', ['FILLED'])
             ->orderBy('updated_at', 'desc')
             ->take($limit)

@@ -28,10 +28,12 @@ class ApiRateLimit extends Model
         'request_last_time',
         'request_rate_limit',
         'request_reset_interval',
+        'request_status',
         'order_count',
         'order_last_time',
         'order_rate_limit',
         'order_reset_interval',
+        'order_status',
         'status',
     ];
 }

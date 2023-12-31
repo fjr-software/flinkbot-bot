@@ -8,6 +8,14 @@ use FjrSoftware\Flinkbot\Exchange\Binance;
 
 enum ExchangeOptions: string
 {
-    case NONE = '';
-    case BINANCE = Binance::class;
+    case NONE = 'NONE';
+    case BINANCE = 'BINANCE';
+
+    public function getClass(): string
+    {
+        return match($this) {
+            static::NONE => '',
+            static::BINANCE => Binance::class,
+        };
+    }
 }

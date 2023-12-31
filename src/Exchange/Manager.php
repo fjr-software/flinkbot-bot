@@ -20,17 +20,17 @@ class Manager
     ];
 
     /**
-     * @var array
+     * @var ExchangeInterface
      */
-    private array $connectors = [];
+    private ExchangeInterface $exchange = null;
 
     /**
      * Constructor
      *
-     * @param ExchangeOptions $exchange
+     * @param ExchangeOptions $exchangeName
      */
     public function __construct(
-        private readonly ExchangeOptions $exchange,
+        private readonly ExchangeOptions $exchangeName,
         private readonly string $publicKey,
         private readonly string $privateKey
     ) {
@@ -38,13 +38,13 @@ class Manager
     }
 
     /**
-     * Get connectors
+     * Get exchange
      *
-     * @return ExchangeInterface[]
+     * @return ExchangeInterface
      */
-    public function getConnectors(): array
+    public function getExchange(): ExchangeInterface
     {
-        return $this->connectors;
+        return $this->exchange;
     }
 
     /**
@@ -56,63 +56,43 @@ class Manager
     {
         $rateLimitHost = ApiRateLimit::where([
             'type' => 'hosting',
-            'exchange' => strtolower($this->exchange->name),
+            'exchange' => strtolower($this->exchangeName->name),
             'status' => 'active',
             'ip' => $this->getIp()
         ])->first();
 
         $rateLimitList = ApiRateLimit::where([
             'type' => 'proxy',
-            'exchange' => strtolower($this->exchange->name),
+            'exchange' => strtolower($this->exchangeName->name),
             'status' => 'active'
         ])->get();
 
-        if ($rateLimitHost?->request_status === 'active') {
-            $this->rateLimits['request'] = $rateLimitHost;
-        }
+        $rateLimitCurrent = null;
 
-        if ($rateLimitHost?->order_status === 'active') {
-            $this->rateLimits['order'] = $rateLimitHost;
+        if ($rateLimitHost?->request_status === 'active') {
+            $rateLimitCurrent = $rateLimitHost;
         }
 
         foreach ($rateLimitList as $rateLimit) {
-            if ($rateLimit->request_status === 'active' && !$this->rateLimits['request']) {
-                $this->rateLimits['request'] = $rateLimit;
-            }
-
-            if ($rateLimit->order_status === 'active' && !$this->rateLimits['order']) {
-                $this->rateLimits['order'] = $rateLimit;
-            }
-
-            if ($this->rateLimits['request'] && $this->rateLimits['order']) {
+            if ($rateLimit->request_status === 'active' && !$rateLimitCurrent) {
+                $rateLimitCurrent = $rateLimit;
                 break;
             }
         }
 
-        $requestCallBack = function (RateLimit $rateLimit, ?Proxie $proxie = null): void
-        {
-            $proxie->getModel()?->update([
-                'request_count' => $rateLimit->getCurrentRequest(),
-                'request_last_time' => ApiRateLimit::raw('NOW()'),
-                'order_count' => $rateLimit->getCurrentOrder(),
-                'order_last_time' => ApiRateLimit::raw('NOW()')
-            ]);
-        };
-
-        $this->connectors = [
-            'request' => new $this->exchange->value(
-                $this->publicKey,
-                $this->privateKey,
-                $this->getProxie($this->rateLimits['request']),
-                $requestCallBack
-            ),
-            'order' => new $this->exchange->value(
-                $this->publicKey,
-                $this->privateKey,
-                $this->getProxie($this->rateLimits['order']),
-                $requestCallBack
-            ),
-        ];
+        $this->exchange = new ($this->exchangeName->getClass())(
+            $this->publicKey,
+            $this->privateKey,
+            $this->getProxie($rateLimitCurrent),
+            function (RateLimit $rateLimit, ?Proxie $proxie = null) {
+                $proxie->getModel()?->update([
+                    'request_count' => $rateLimit->getCurrentRequest(),
+                    'request_last_time' => ApiRateLimit::raw('NOW()'),
+                    'order_count' => $rateLimit->getCurrentOrder(),
+                    'order_last_time' => ApiRateLimit::raw('NOW()')
+                ]);
+            }
+        );
     }
 
     /**

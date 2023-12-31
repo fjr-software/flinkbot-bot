@@ -5,24 +5,18 @@ declare(strict_types=1);
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use LogicException;
+use FjrSoftware\Flinkbot\Bot\Exchange\ExchangeOptions;
+use FjrSoftware\Flinkbot\Bot\Exchange\Manager;
 use FjrSoftware\Flinkbot\Bot\Model\Bots;
-use FjrSoftware\Flinkbot\Exchange\Binance;
 use FjrSoftware\Flinkbot\Exchange\ExchangeInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class Bot
 {
     /**
-     * @const array
+     * @var Manager|null
      */
-    public const EXCHANGES = [
-        'binance' => Binance::class
-    ];
-
-    /**
-     * @var ExchangeInterface|null
-     */
-    private ?ExchangeInterface $exchange = null;
+    private ?Manager $exchangeManager = null;
 
     /**
      * @var Collection
@@ -71,25 +65,35 @@ class Bot
     }
 
     /**
-     * Get exchange
+     * Get exchange manager
      *
-     * @return ExchangeInterface
+     * @return Manager
      * @throws LogicException
      */
-    public function getExchange(): ExchangeInterface
+    public function getExchangeManager(): Manager
     {
-        $exchange = $this->getData()->exchange;
+        $exchange = strtoupper($this->getData()->exchange);
 
-        if (!key_exists($exchange, self::EXCHANGES)) {
+        if (!key_exists($exchange, array_column(ExchangeOptions::cases(), 'name'))) {
             throw new LogicException("Exchange {$exchange} not found.");
         }
 
         if (!$this->exchange) {
-            $exchange = self::EXCHANGES[$exchange];
-            $this->exchange = new $exchange($this->getApiKey(), $this->getApiSecret());
+            $exchange = ExchangeOptions::from($exchange);
+            $this->exchangeManager = new Manager($exchange, $this->getApiKey(), $this->getApiSecret());
         }
 
-        return $this->exchange;
+        return $this->exchangeManager;
+    }
+
+    /**
+     * Get exchange
+     *
+     * @return ExchangeInterface|null
+     */
+    public function getExchange(): ?ExchangeInterface
+    {
+        return $this->exchangeManager?->getExchange();
     }
 
     /**

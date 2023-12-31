@@ -105,14 +105,6 @@ class Analyzer
      */
     public function __destruct()
     {
-        $rateLimit = $this->bot->getExchange()->getRateLimit();
-
-        printf(
-            "Limit request: %d - Limit order: %d\n",
-            $rateLimit->getCurrentRequest(),
-            $rateLimit->getCurrentOrder()
-        );
-
         echo "Finished - " . date('Y-m-d H:i:s') . "\n";
     }
 

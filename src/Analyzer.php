@@ -207,7 +207,9 @@ class Analyzer
                 'SHORT' => null
             ];
             $positions = $this->position->get($symbol);
-            $checkCollateralForProfitClosure = $this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false;
+            $checkCollateralForProfitClosure = (bool) ($this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false);
+            $collateralCheckDisableThreshold = (float) ($this->bot->getConfig()->getPosition()['collateralCheckDisableThreshold'] ?? 0);
+            $collateralCheckDisableThreshold /= 100;
 
             if ($checkCollateralForProfitClosure) {
                 foreach ($positions as $position) {
@@ -239,13 +241,14 @@ class Analyzer
                     $hasPosition[$position->side] = true;
 
                     if ($checkCollateralForProfitClosure && ($canPositionGain || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
+                        $requiredValueCollateral = abs((float) $collateralPosition->pnl_roi_value * $collateralCheckDisableThreshold);
                         $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
-                            && $collateralPosition->pnl_roi_value <= $position->pnl_roi_value
+                            && $position->pnl_roi_value >= $requiredValueCollateral
                             && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1)
                         );
                         $canPrevent = $canPositionGain;
 
-                        $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$collateralPosition->pnl_roi_value} x {$position->pnl_roi_value}";
+                        $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
 
                         $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

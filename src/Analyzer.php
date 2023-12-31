@@ -241,7 +241,7 @@ class Analyzer
                     $hasPosition[$position->side] = true;
 
                     if ($checkCollateralForProfitClosure && ($canPositionGain || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
-                        $requiredValueCollateral = abs((float) $collateralPosition->pnl_roi_value * $collateralCheckDisableThreshold);
+                        $requiredValueCollateral = abs((float) ($collateralPosition->pnl_roi_value) * $collateralCheckDisableThreshold);
                         $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
                             && $position->pnl_roi_value >= $requiredValueCollateral
                             && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1)

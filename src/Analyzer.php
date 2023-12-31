@@ -202,8 +202,23 @@ class Analyzer
                 'LONG' => 0,
                 'SHORT' => 0
             ];
+            $collateral = [
+                'LONG' => null,
+                'SHORT' => null
+            ];
+            $positions = $this->position->get($symbol);
+            $checkCollateralForProfitClosure = $this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false;
 
-            foreach ($this->position->get($symbol) as $position) {
+            if ($checkCollateralForProfitClosure) {
+                foreach ($positions as $position) {
+                    if ($position->status === 'open') {
+                        $collateralSide = $position->side === 'SHORT' ? 'LONG' : 'SHORT';
+                        $collateral[$collateralSide] = $position;
+                    }
+                }
+            }
+
+            foreach ($positions as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
                 $marginSymbol[$position->side] = $position->margin_symbol_percent;
                 $configPosition = $this->bot->getConfig()->getPosition();
@@ -222,6 +237,12 @@ class Analyzer
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
+
+                    if ($checkCollateralForProfitClosure && ($canPositionGain || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
+                        $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
+                            && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1));
+                        $canPrevent = $canPositionGain;
+                    }
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
                         $multipleTrigger = $canPositionTrade ? $this->bot->getConfig()->getMultiplierIncrementTrigger() : 1;

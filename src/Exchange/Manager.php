@@ -84,9 +84,9 @@ class Manager
                 $orderCount >= 0 ? $orderCount : 0;
 
                 $proxie->getModel()?->update([
-                    'request_count' => $requestCount,
+                    'request_count' => abs((int) $requestCount),
                     'request_last_time' => ApiRateLimit::raw('NOW()'),
-                    'order_count' => $orderCount,
+                    'order_count' => abs((int) $orderCount),
                     'order_last_time' => ApiRateLimit::raw('NOW()')
                 ]);
             }

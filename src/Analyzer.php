@@ -242,6 +242,12 @@ class Analyzer
                         $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
                             && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1));
                         $canPrevent = $canPositionGain;
+
+                        $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$collateralPosition->pnl_roi_value} x {$position->pnl_roi_value}";
+
+                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                        echo "{$message}\n";
                     }
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {

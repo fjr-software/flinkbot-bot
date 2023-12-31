@@ -64,11 +64,11 @@ class Manager
             'status' => 'active'
         ])->get();
 
-        if ($rateLimitHost->request_status === 'active') {
+        if ($rateLimitHost?->request_status === 'active') {
             $this->rateLimits['request'] = $rateLimitHost;
         }
 
-        if ($rateLimitHost->order_status === 'active') {
+        if ($rateLimitHost?->order_status === 'active') {
             $this->rateLimits['order'] = $rateLimitHost;
         }
 
@@ -142,7 +142,7 @@ class Manager
         $customerId = 'hl_1697dddf';
         $zone = 'data_center';
         $password = 't5g38nb15w1y';
-        $username = '-ip-'.$model->ip;
+        $username = '-ip-'.$model?->ip;
         $username = sprintf('brd-customer-%s-zone-%s%s', $customerId, $zone, $username);
         $proxie = new Proxie($host, $username, $password);
         $proxie->setModel($model);

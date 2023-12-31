@@ -14,7 +14,10 @@ class Manager
     /**
      * @var array
      */
-    private array $rateLimits = [];
+    private array $rateLimits = [
+        'request' => null,
+        'order' => null
+    ];
 
     /**
      * @var array
@@ -53,14 +56,14 @@ class Manager
     {
         $rateLimitHost = ApiRateLimit::where([
             'type' => 'hosting',
-            'exchange' => $this->exchange,
+            'exchange' => strtolower($this->exchange->name),
             'status' => 'active',
             'ip' => $this->getIp()
         ])->first();
 
         $rateLimitList = ApiRateLimit::where([
             'type' => 'proxy',
-            'exchange' => $this->exchange,
+            'exchange' => strtolower($this->exchange->name),
             'status' => 'active'
         ])->get();
 
@@ -86,37 +89,30 @@ class Manager
             }
         }
 
+        $requestCallBack = function (RateLimit $rateLimit, ?Proxie $proxie = null): void
+        {
+            $proxie->getModel()?->update([
+                'request_count' => $rateLimit->getCurrentRequest(),
+                'request_last_time' => ApiRateLimit::raw('NOW()'),
+                'order_count' => $rateLimit->getCurrentOrder(),
+                'order_last_time' => ApiRateLimit::raw('NOW()')
+            ]);
+        };
+
         $this->connectors = [
-            'request' => new $this->exchange(
+            'request' => new $this->exchange->value(
                 $this->publicKey,
                 $this->privateKey,
                 $this->getProxie($this->rateLimits['request']),
-                [$this, 'requestCallback']
+                $requestCallBack
             ),
-            'order' => new $this->exchange(
+            'order' => new $this->exchange->value(
                 $this->publicKey,
                 $this->privateKey,
                 $this->getProxie($this->rateLimits['order']),
-                [$this, 'requestCallback']
+                $requestCallBack
             ),
         ];
-    }
-
-    /**
-     * Request callback
-     *
-     * @param RateLimit $rateLimit
-     * @param Proxie|null $proxie
-     * @return void
-     */
-    private function requestCallback(RateLimit $rateLimit, ?Proxie $proxie = null): void
-    {
-        $proxie->getModel()?->update([
-            'request_count' => $rateLimit->getCurrentRequest(),
-            'request_last_time' => ApiRateLimit::raw('NOW()'),
-            'order_count' => $rateLimit->getCurrentOrder(),
-            'order_last_time' => ApiRateLimit::raw('NOW()')
-        ]);
     }
 
     /**

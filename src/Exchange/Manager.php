@@ -77,10 +77,13 @@ class Manager
             $this->privateKey,
             $this->getProxie($rateLimitCurrent),
             function (RateLimit $rateLimit, ?Proxie $proxie = null) {
+                $requestCount = $rateLimit->getCurrentRequest();
+                $orderCount = $rateLimit->getCurrentOrder();
+
                 $proxie->getModel()?->update([
-                    'request_count' => $rateLimit->getCurrentRequest(),
+                    'request_count' => $requestCount >= 0 ? $requestCount : 0,
                     'request_last_time' => ApiRateLimit::raw('NOW()'),
-                    'order_count' => $rateLimit->getCurrentOrder(),
+                    'order_count' => $orderCount >= 0 ? $orderCount : 0,
                     'order_last_time' => ApiRateLimit::raw('NOW()')
                 ]);
             }

@@ -217,18 +217,21 @@ class Analyzer
                     && !$canPositionGain && !$canPositionLoss
                     && $position->pnl_roi_percent >= ($configPosition['profit'] / 4)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
+                $canPositionTrade = $side === $position->side;
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
+                        $multipleTrigger = $canPositionTrade ? $this->bot->getConfig()->getMultiplierIncrementTrigger() : 1;
+                        $incrementTriggerPercentage = $this->bot->getConfig()->getIncrementTriggerPercentage() * $multipleTrigger;
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
                         $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
 
                         $markPrice = (float) ($markPrice ?? $position->mark_price);
                         $entryPrice = (float) $position->entry_price;
 
-                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $this->bot->getConfig()->getIncrementTriggerPercentage());
+                        $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
                         $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
 
@@ -249,7 +252,7 @@ class Analyzer
                                 $canGainLoss = $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
                                 $diffPrice = $this->bot->getExchange()->calculeProfit(
                                     $entryPrice,
-                                    (float) ($configPosition['profit'] / $position->leverage) + $this->bot->getConfig()->getIncrementTriggerPercentage()
+                                    (float) ($configPosition['profit'] / $position->leverage) + $incrementTriggerPercentage
                                 );
                                 $avgEntryMarkGain = ($entryPrice + $markPrice) / 2;
                                 $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);

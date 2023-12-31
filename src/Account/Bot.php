@@ -32,6 +32,26 @@ class Bot
         private readonly int $botId
     ) {
         $this->collection = Bots::where(['id' => $this->botId])->get();
+        $this->init();
+    }
+
+    /**
+     * Initialize
+     *
+     * @return void
+     */
+    private function init(): void
+    {
+        $exchange = strtoupper($this->getData()->exchange);
+
+        if (!key_exists($exchange, array_column(ExchangeOptions::cases(), 'name'))) {
+            throw new LogicException("Exchange {$exchange} not found.");
+        }
+
+        if (!$this->exchangeManager) {
+            $exchange = ExchangeOptions::from($exchange);
+            $this->exchangeManager = new Manager($exchange, $this->getApiKey(), $this->getApiSecret());
+        }
     }
 
     /**
@@ -67,22 +87,11 @@ class Bot
     /**
      * Get exchange manager
      *
-     * @return Manager
+     * @return Manager|null
      * @throws LogicException
      */
-    public function getExchangeManager(): Manager
+    public function getExchangeManager(): ?Manager
     {
-        $exchange = strtoupper($this->getData()->exchange);
-
-        if (!key_exists($exchange, array_column(ExchangeOptions::cases(), 'name'))) {
-            throw new LogicException("Exchange {$exchange} not found.");
-        }
-
-        if (!$this->exchangeManager) {
-            $exchange = ExchangeOptions::from($exchange);
-            $this->exchangeManager = new Manager($exchange, $this->getApiKey(), $this->getApiSecret());
-        }
-
         return $this->exchangeManager;
     }
 

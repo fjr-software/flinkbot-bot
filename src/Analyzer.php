@@ -222,7 +222,11 @@ class Analyzer
 
             foreach ($positions as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
-                $marginSymbol[$position->side] = $position->margin_symbol_percent;
+                $marginSymbol[$position->side] = [
+                    'usage' => $position->margin_symbol_percent,
+                    'limit' => $position->symbol->max_margin
+                ];
+
                 $configPosition = $this->bot->getConfig()->getPosition();
                 $canPositionGain = $configPosition['profit'] > 0
                     && $position->pnl_roi_percent >= $configPosition['profit']
@@ -351,7 +355,8 @@ class Analyzer
 
             if ($side) {
                 $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
-                $limitMarginSymbol = $marginSymbol[$side] < $this->bot->getConfig()->getMargin()['symbol'];
+                $limitMarginSymbol = $marginSymbol[$side]['usage'] < $this->bot->getConfig()->getMargin()['symbol']
+                    || $marginSymbol[$side]['limit'] && $marginSymbol[$side]['usage'] < $marginSymbol[$side]['limit'];
                 $limitMargin = $limitMarginAccount && $limitMarginSymbol;
 
                 if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {

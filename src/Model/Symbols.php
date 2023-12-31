@@ -25,6 +25,7 @@ class Symbols extends Model
         'bot_id',
         'pair',
         'leverage',
+        'max_margin',
         'status',
         'base_quantity',
         'min_quantity',

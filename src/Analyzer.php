@@ -215,7 +215,8 @@ class Analyzer
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
                 $canPrevent = $configPosition['profit'] > 0
                     && !$canPositionGain && !$canPositionLoss
-                    && $position->pnl_roi_percent >= ($configPosition['profit'] / 4)
+                    && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
+                    && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
                 $canPositionTrade = $side === $position->side;
 

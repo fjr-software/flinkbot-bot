@@ -233,7 +233,9 @@ class Analyzer
 
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
-                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
+
+                        $diffPriceLoss = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage / $multipleTrigger);
+                        $priceCloseStopGain = (float) ($position->side === 'SHORT' ? $markPrice + $diffPriceLoss : $markPrice - $diffPriceLoss);
 
                         if ($this->bot->getConfig()->getEnableHalfPriceProtection()) {
                             $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;

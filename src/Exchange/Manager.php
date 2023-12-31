@@ -85,11 +85,11 @@ class Manager
 
                 $proxie->getModel()?->update([
                     'request_count' => ApiRateLimit::raw(
-                        "request_count + abs(request_count-if(request_count > 0, request_count -{$requestCount}, {$requestCount}))"
+                        "request_count + abs(request_count-if(request_count > 0, request_count-{$requestCount}, {$requestCount}))"
                     ),
                     'request_last_time' => ApiRateLimit::raw('NOW()'),
                     'order_count' => ApiRateLimit::raw(
-                        "order_count + abs(order_count-if(order_count > 0, order_count -{$orderCount}, {$orderCount}))"
+                        "order_count + abs(order_count-if(order_count > 0, order_count-{$orderCount}, {$orderCount}))"
                     ),
                     'order_last_time' => ApiRateLimit::raw('NOW()')
                 ]);

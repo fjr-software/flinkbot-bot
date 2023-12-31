@@ -78,7 +78,7 @@ class Bot
             throw new LogicException("Exchange {$exchange} not found.");
         }
 
-        if (!$this->exchange) {
+        if (!$this->exchangeManager) {
             $exchange = ExchangeOptions::from($exchange);
             $this->exchangeManager = new Manager($exchange, $this->getApiKey(), $this->getApiSecret());
         }

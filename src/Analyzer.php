@@ -240,7 +240,9 @@ class Analyzer
 
                     if ($checkCollateralForProfitClosure && ($canPositionGain || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
                         $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
-                            && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1));
+                            && $collateralPosition->pnl_roi_value <= $position->pnl_roi_value
+                            && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1)
+                        );
                         $canPrevent = $canPositionGain;
 
                         $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$collateralPosition->pnl_roi_value} x {$position->pnl_roi_value}";

@@ -242,17 +242,21 @@ class Analyzer
 
                     if ($checkCollateralForProfitClosure && ($canPositionGain || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
                         $requiredValueCollateral = abs((float) ($collateralPosition->pnl_roi_value) * $collateralCheckDisableThreshold);
-                        $canPositionGain = !($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
-                            && $position->pnl_roi_value >= $requiredValueCollateral
+                        $canCollateral = ($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
+                            && $position->pnl_roi_value < $requiredValueCollateral
                             && $collateralPosition->pnl_roi_value <= ($configPosition['minimumGain'] * -1)
                         );
-                        $canPrevent = $canPositionGain;
 
-                        $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
+                        if ($canCollateral) {
+                            $canPositionGain = $canPositionGain ? false : false;
+                            $canPrevent = $canPrevent ? false : false;
 
-                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                            $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
 
-                        echo "{$message}\n";
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
+                        }
                     }
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {

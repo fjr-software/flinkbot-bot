@@ -180,11 +180,13 @@ class Analyzer
                 }
             }
 
-            $message = implode(' - ', $debugValues) . " - Side: {$side}";
+            if ($this->bot->enableDebug()) {
+                $message = implode(' - ', $debugValues) . " - Side: {$side}";
 
-            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-            echo "{$message}\n";
+                echo "{$message}\n";
+            }
 
             $book = $this->bot->getExchange()->getBook($symbol);
             $bookBuy = $book['bids'][0];
@@ -255,11 +257,13 @@ class Analyzer
                             $canPositionGain = $canPositionGain ? false : false;
                             $canPrevent = $canPrevent ? false : false;
 
-                            $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
+                            if ($this->bot->enableDebug()) {
+                                $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
 
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                            echo "{$message}\n";
+                                echo "{$message}\n";
+                            }
                         }
                     }
 
@@ -317,11 +321,13 @@ class Analyzer
                                 $this->updateOrCreateOrder($orderStop);
                             }
 
-                            $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}";
+                            if ($this->bot->enableDebug()) {
+                                $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}";
 
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                            echo "{$message}\n";
+                                echo "{$message}\n";
+                            }
                         }
                     }
                 }
@@ -331,11 +337,13 @@ class Analyzer
                 if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderCommonTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                    $message = 'Order timeout[common]';
+                    if ($this->bot->enableDebug()) {
+                        $message = 'Order timeout[common]';
 
-                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                    echo "{$message}\n";
+                        echo "{$message}\n";
+                    }
                 }
             }
 
@@ -344,11 +352,13 @@ class Analyzer
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                        $message = 'Order timeout[trigger]';
+                        if ($this->bot->enableDebug()) {
+                            $message = 'Order timeout[trigger]';
 
-                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                        echo "{$message}\n";
+                            echo "{$message}\n";
+                        }
                     }
                 }
             }
@@ -380,11 +390,13 @@ class Analyzer
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
 
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
-                            $message = "Recently closed {$side} order";
+                            if ($this->bot->enableDebug()) {
+                                $message = "Recently closed {$side} order";
 
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                            echo "{$message}\n";
+                                echo "{$message}\n";
+                            }
                         } else {
                             $enableTradeAvg = true;
 
@@ -413,27 +425,34 @@ class Analyzer
 
                                 $this->updateOrCreateOrder($order);
 
-                                $message = 'Open position';
+                                if ($this->bot->enableDebug()) {
+                                    $message = 'Open position';
 
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                                echo "{$message}\n";
+                                    echo "{$message}\n";
+                                }
                             } else {
                                 $price = (float) $price;
                                 $avgPriceOrder = $this->bot->getExchange()->formatDecimal($price, $avgPriceOrder);
-                                $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
 
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                if ($this->bot->enableDebug()) {
+                                    $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
 
-                                echo "{$message}\n";
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                    echo "{$message}\n";
+                                }
                             }
                         }
                     } else {
-                        $message = "Symbol {$symbol} not found";
+                        if ($this->bot->enableDebug()) {
+                            $message = "Symbol {$symbol} not found";
 
-                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                        echo "{$message}\n";
+                            echo "{$message}\n";
+                        }
                     }
                 } else {
                     $reason = '';
@@ -446,11 +465,14 @@ class Analyzer
                         $reason = 'openOrders';
                     }
 
-                    $message = "Without {$side} operation[$reason]";
+                    if ($this->bot->enableDebug()) {
+                        $message = "Without {$side} operation[$reason]";
 
-                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                    echo "{$message}\n";
+                        echo "{$message}\n";
+                    }
+
                 }
             }
         } catch (Exception $e) {

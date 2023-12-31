@@ -32,6 +32,7 @@ class Bots extends Model
         'state',
         'config',
         'description',
+        'enable_debug',
     ];
 
     /**

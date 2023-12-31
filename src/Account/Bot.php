@@ -166,6 +166,16 @@ class Bot
     }
 
     /**
+     * Enable debug
+     *
+     * @return bool
+     */
+    public function enableDebug(): bool
+    {
+        return $this->getData()->enable_debug;
+    }
+
+    /**
      * Get created at
      *
      * @return string

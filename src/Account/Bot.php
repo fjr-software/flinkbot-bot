@@ -44,7 +44,7 @@ class Bot
     {
         $exchange = strtoupper($this->getData()->exchange);
 
-        if (!key_exists($exchange, array_column(ExchangeOptions::cases(), 'name'))) {
+        if (!in_array($exchange, array_column(ExchangeOptions::cases(), 'name'))) {
             throw new LogicException("Exchange {$exchange} not found.");
         }
 

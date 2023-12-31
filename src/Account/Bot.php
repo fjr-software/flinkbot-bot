@@ -172,7 +172,7 @@ class Bot
      */
     public function enableDebug(): bool
     {
-        return $this->getData()->enable_debug;
+        return (bool) $this->getData()->enable_debug;
     }
 
     /**

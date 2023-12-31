@@ -12,17 +12,9 @@ use FjrSoftware\Flinkbot\Request\Proxie;
 class Manager
 {
     /**
-     * @var array
-     */
-    private array $rateLimits = [
-        'request' => null,
-        'order' => null
-    ];
-
-    /**
      * @var ExchangeInterface
      */
-    private ExchangeInterface $exchange = null;
+    private ExchangeInterface $exchange;
 
     /**
      * Constructor

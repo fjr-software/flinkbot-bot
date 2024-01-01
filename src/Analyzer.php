@@ -349,6 +349,10 @@ class Analyzer
 
             if ($canGainLoss) {
                 foreach ($openOrdersClosed as $openOrder) {
+                    if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
+                        continue;
+                    }
+
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 

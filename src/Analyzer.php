@@ -316,6 +316,13 @@ class Analyzer
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
                         $canGainLoss = true;
 
+                        if ($priceStopIndicator && (
+                            $position->side === 'LONG' && $markPrice > $priceStopIndicator
+                            || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
+                        )) {
+                            $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
+                        }
+
                         if ($canPrevent) {
                             $canGainLoss = $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
                             $diffPrice = $this->bot->getExchange()->calculeProfit(
@@ -338,13 +345,6 @@ class Analyzer
                         }
 
                         if (!$canPrevent && !$openOrdersClosed) {
-                            if ($priceStopIndicator && (
-                                $position->side === 'LONG' && $markPrice > $priceStopIndicator
-                                || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
-                            )) {
-                                $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
-                            }
-
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 

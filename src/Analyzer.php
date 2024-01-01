@@ -365,8 +365,12 @@ class Analyzer
 
             if ($side) {
                 $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
-                $limitMarginSymbol = $marginSymbol[$side]['usage'] < $this->bot->getConfig()->getMargin()['symbol']
-                    || $marginSymbol[$side]['limit'] && $marginSymbol[$side]['usage'] < $marginSymbol[$side]['limit'];
+                $limitMarginSymbol = (
+                    $marginSymbol[$side]['usage'] < $this->bot->getConfig()->getMargin()['symbol']
+                ) && (
+                    !$marginSymbol[$side]['limit']
+                    || ($marginSymbol[$side]['limit'] && $marginSymbol[$side]['usage'] < $marginSymbol[$side]['limit'])
+                );
                 $limitMargin = $limitMarginAccount && $limitMarginSymbol;
 
                 if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {

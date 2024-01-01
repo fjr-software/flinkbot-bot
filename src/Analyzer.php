@@ -349,8 +349,9 @@ class Analyzer
                         }
 
                         if ($this->bot->enableDebug()) {
+                            $percent = (float) $position->pnl_roi_percent;
                             $statusForClosed = !$openOrdersClosed ? '' : ' - Renewed';
-                            $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}{$statusForClosed}";
+                            $message = "Close position[{$typeClosed}] - ROI: {$percent}%{$statusForClosed}";
 
                             $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

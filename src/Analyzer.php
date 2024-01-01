@@ -348,6 +348,8 @@ class Analyzer
             }
 
             if ($canGainLoss) {
+                $orderClosed = false;
+
                 foreach ($openOrdersClosed as $openOrder) {
                     if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
                         continue;
@@ -355,6 +357,7 @@ class Analyzer
 
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                        $orderClosed = true;
 
                         if ($this->bot->enableDebug()) {
                             $message = 'Order timeout[trigger]';
@@ -364,6 +367,10 @@ class Analyzer
                             echo "{$message}\n";
                         }
                     }
+                }
+
+                if ($orderClosed) {
+                    $this->runAnalyzer($symbol);
                 }
             }
 

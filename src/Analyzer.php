@@ -389,17 +389,24 @@ class Analyzer
                                 || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] > $openOrder['stopPrice']
                             )
                         ) {
-                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                            $diffTrigger = abs($this->bot->getExchange()->percentage(
+                                (float) $pricesClosedPosition[$openOrder['positionSide']]['gain'],
+                                (float) $openOrder['stopPrice']
+                            ));
 
-                            if ($this->bot->enableDebug()) {
-                                $message = 'Order timeout[trigger]';
+                            if ($diffTrigger >= 0.10) {
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                if ($this->bot->enableDebug()) {
+                                    $message = 'Order timeout[trigger]';
 
-                                echo "{$message}\n";
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                    echo "{$message}\n";
+                                }
+
+                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
                             }
-
-                            $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
                         }
 
                         if (
@@ -409,17 +416,24 @@ class Analyzer
                                 || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
                             )
                         ) {
-                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                            $diffTrigger = abs($this->bot->getExchange()->percentage(
+                                (float) $pricesClosedPosition[$openOrder['positionSide']]['loss'],
+                                (float) $openOrder['stopPrice']
+                            ));
 
-                            if ($this->bot->enableDebug()) {
-                                $message = 'Order timeout[trigger]';
+                            if ($diffTrigger >= 0.10) {
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                if ($this->bot->enableDebug()) {
+                                    $message = 'Order timeout[trigger]';
 
-                                echo "{$message}\n";
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                    echo "{$message}\n";
+                                }
+
+                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                             }
-
-                            $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                         }
                     }
                 }

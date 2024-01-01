@@ -142,10 +142,21 @@ class Analyzer
 
             $indicators = $this->bot->getConfig()->getIndicator($closes, $current);
             $debugValues = ['Current: ' . $current];
+            $priceStopIndicator = 0;
             $side = '';
 
             foreach ($indicators as $ind => $val) {
                 if (!in_array($ind, ['long', 'short'])) {
+                    if ($this->bot->getConfig()->getPosition()['enableStopIndicator']) {
+                        if (preg_match('/(?<indicator>[a-z]+)@(?<ord>[0-9\.]+)\_(?<value>[0-9\.]+)/i', $this->bot->getConfig()->getPosition()['stopIndicator'], $match)) {
+                            if ($ind === $match['indicator'] && isset($val[$match['ord']])) {
+                                if (isset($val[$match['ord']]->getValue()[$match['value']])) {
+                                    $priceStopIndicator = (float) $val[$match['ord']]->getValue()[$match['value']];
+                                }
+                            }
+                        }
+                    }
+
                     $sideInd = $indicators['long'][$ind] ? 'LONG' : '';
                     $sideInd = $indicators['short'][$ind] ? 'SHORT' : $sideInd;
                     $debugValues[] = $ind . ':'. $sideInd;
@@ -327,6 +338,13 @@ class Analyzer
                         }
 
                         if (!$canPrevent && !$openOrdersClosed) {
+                            if ($priceStopIndicator && (
+                                $position->side === 'LONG' && $markPrice > $priceStopIndicator
+                                || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
+                            )) {
+                                $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
+                            }
+
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 

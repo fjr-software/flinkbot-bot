@@ -222,6 +222,17 @@ class Analyzer
                 }
             }
 
+            $pricesClosedPosition = [
+                'LONG' => [
+                    'gain' => 0,
+                    'loss' => 0
+                ],
+                'SHORT' => [
+                    'gain' => 0,
+                    'loss' => 0
+                ]
+            ];
+
             foreach ($positions as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
                 $marginSymbol[$position->side] = [
@@ -294,40 +305,46 @@ class Analyzer
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
                         $canGainLoss = true;
 
-                        if (!$openOrdersClosed) {
-                            if ($canPrevent) {
-                                $canGainLoss = $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
-                                $diffPrice = $this->bot->getExchange()->calculeProfit(
-                                    $entryPrice,
-                                    (float) ($configPosition['profit'] / $position->leverage) + $incrementTriggerPercentage
-                                );
-                                $avgEntryMarkGain = ($entryPrice + $markPrice) / 2;
-                                $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);
-                                $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
-                                $typeClosed = 'prevent';
-                            }
+                        if ($canPrevent) {
+                            $canGainLoss = $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
+                            $diffPrice = $this->bot->getExchange()->calculeProfit(
+                                $entryPrice,
+                                (float) ($configPosition['profit'] / $position->leverage) + $incrementTriggerPercentage
+                            );
+                            $avgEntryMarkGain = ($entryPrice + $markPrice) / 2;
+                            $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);
+                            $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
+                            $typeClosed = 'prevent';
+                        }
 
+                        $pricesClosedPosition[$position->side] = [
+                            'gain' => $priceCloseGain,
+                            'loss' => $priceCloseStopGain
+                        ];
+
+                        if (!$openOrdersClosed) {
                             $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
                             $orderProfit['userId'] = $this->bot->getUserId();
                             $orderProfit['symbolId'] = $position->symbol->id;
 
                             $this->updateOrCreateOrder($orderProfit);
+                        }
 
-                            if (!$canPrevent) {
-                                $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
-                                $orderStop['userId'] = $this->bot->getUserId();
-                                $orderStop['symbolId'] = $position->symbol->id;
+                        if (!$canPrevent && !$openOrdersClosed) {
+                            $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                            $orderStop['userId'] = $this->bot->getUserId();
+                            $orderStop['symbolId'] = $position->symbol->id;
 
-                                $this->updateOrCreateOrder($orderStop);
-                            }
+                            $this->updateOrCreateOrder($orderStop);
+                        }
 
-                            if ($this->bot->enableDebug()) {
-                                $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}";
+                        if ($this->bot->enableDebug()) {
+                            $statusForClosed = !$openOrdersClosed ? '' : ' - Renewed';
+                            $message = "Close position[{$typeClosed}] - ROI: {$position->pnl_roi_percent}{$statusForClosed}";
 
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                                echo "{$message}\n";
-                            }
+                            echo "{$message}\n";
                         }
                     }
                 }
@@ -348,29 +365,46 @@ class Analyzer
             }
 
             if ($canGainLoss) {
-                $orderClosed = false;
-
                 foreach ($openOrdersClosed as $openOrder) {
                     if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
                         continue;
                     }
 
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
-                        $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
-                        $orderClosed = true;
+                        $enabledCancel = false;
 
-                        if ($this->bot->enableDebug()) {
-                            $message = 'Order timeout[trigger]';
+                        if (
+                            $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
+                            && (
+                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] > $openOrder['stopPrice']
+                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] < $openOrder['stopPrice']
+                            )
+                        ) {
+                            $enabledCancel = true;
+                        }
 
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                        if (
+                            $openOrder['origType'] === 'STOP_MARKET'
+                            && (
+                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
+                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] < $openOrder['stopPrice']
+                            )
+                        ) {
+                            $enabledCancel = true;
+                        }
 
-                            echo "{$message}\n";
+                        if ($enabledCancel) {
+                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                            if ($this->bot->enableDebug()) {
+                                $message = 'Order timeout[trigger]';
+
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                echo "{$message}\n";
+                            }
                         }
                     }
-                }
-
-                if ($orderClosed) {
-                    $this->runAnalyzer($symbol);
                 }
             }
 

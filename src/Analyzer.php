@@ -385,8 +385,8 @@ class Analyzer
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
                             && (
-                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] > $openOrder['stopPrice']
-                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] < $openOrder['stopPrice']
+                                $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] < $openOrder['stopPrice']
+                                || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] > $openOrder['stopPrice']
                             )
                         ) {
                             $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
@@ -405,8 +405,8 @@ class Analyzer
                         if (
                             $openOrder['origType'] === 'STOP_MARKET'
                             && (
-                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
-                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] < $openOrder['stopPrice']
+                                $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] < $openOrder['stopPrice']
+                                || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
                             )
                         ) {
                             $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);

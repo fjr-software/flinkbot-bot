@@ -323,19 +323,11 @@ class Analyzer
                         ];
 
                         if (!$openOrdersClosed) {
-                            $orderProfit = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseGain);
-                            $orderProfit['userId'] = $this->bot->getUserId();
-                            $orderProfit['symbolId'] = $position->symbol->id;
-
-                            $this->updateOrCreateOrder($orderProfit);
+                            $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
                         if (!$canPrevent && !$openOrdersClosed) {
-                            $orderStop = $this->bot->getExchange()->closePosition($symbol, $position->side, $priceCloseStopGain, true);
-                            $orderStop['userId'] = $this->bot->getUserId();
-                            $orderStop['symbolId'] = $position->symbol->id;
-
-                            $this->updateOrCreateOrder($orderStop);
+                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 
                         if ($this->bot->enableDebug()) {
@@ -371,8 +363,6 @@ class Analyzer
                     }
 
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
-                        $enabledCancel = false;
-
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
                             && (
@@ -380,20 +370,6 @@ class Analyzer
                                 || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] < $openOrder['stopPrice']
                             )
                         ) {
-                            $enabledCancel = true;
-                        }
-
-                        if (
-                            $openOrder['origType'] === 'STOP_MARKET'
-                            && (
-                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
-                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] < $openOrder['stopPrice']
-                            )
-                        ) {
-                            $enabledCancel = true;
-                        }
-
-                        if ($enabledCancel) {
                             $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
 
                             if ($this->bot->enableDebug()) {
@@ -403,6 +379,28 @@ class Analyzer
 
                                 echo "{$message}\n";
                             }
+
+                            $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
+                        }
+
+                        if (
+                            $openOrder['origType'] === 'STOP_MARKET'
+                            && (
+                                $openOrder['side'] === 'SELL' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] > $openOrder['stopPrice']
+                                || $openOrder['side'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['loss'] < $openOrder['stopPrice']
+                            )
+                        ) {
+                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                            if ($this->bot->enableDebug()) {
+                                $message = 'Order timeout[trigger]';
+
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                echo "{$message}\n";
+                            }
+
+                            $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                         }
                     }
                 }
@@ -611,6 +609,29 @@ class Analyzer
         }
 
         return 0;
+    }
+
+    /**
+     * Close position
+     *
+     * @param string $symbol
+     * @param string $side
+     * @param float $price
+     * @param bool $stop
+     * @return void
+     */
+    private function closePosition(string $symbol, string $side, float $price, bool $stop = false): void
+    {
+        $symbolConfig = Symbols::where([
+            'bot_id' => $this->bot->getId(),
+            'pair' => $symbol
+        ])->first();
+
+        $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop);
+        $order['userId'] = $this->bot->getUserId();
+        $order['symbolId'] = $symbolConfig->id;
+
+        $this->updateOrCreateOrder($order);
     }
 
     /**

@@ -142,11 +142,22 @@ class Analyzer
 
             $indicators = $this->bot->getConfig()->getIndicator($closes, $current);
             $debugValues = ['Current: ' . $current];
+            $priceTakeIndicator = 0;
             $priceStopIndicator = 0;
             $side = '';
 
             foreach ($indicators as $ind => $val) {
                 if (!in_array($ind, ['long', 'short'])) {
+                    if ($this->bot->getConfig()->getPosition()['enableTakeIndicator']) {
+                        if (preg_match('/(?<indicator>[a-z]+)@(?<ord>[0-9\.]+)\_(?<value>[0-9\.]+)/i', $this->bot->getConfig()->getPosition()['takeIndicator'], $match)) {
+                            if ($ind === $match['indicator'] && isset($val[$match['ord']])) {
+                                if (isset($val[$match['ord']]->getValue()[$match['value']])) {
+                                    $priceTakeIndicator = (float) $val[$match['ord']]->getValue()[$match['value']];
+                                }
+                            }
+                        }
+                    }
+
                     if ($this->bot->getConfig()->getPosition()['enableStopIndicator']) {
                         if (preg_match('/(?<indicator>[a-z]+)@(?<ord>[0-9\.]+)\_(?<value>[0-9\.]+)/i', $this->bot->getConfig()->getPosition()['stopIndicator'], $match)) {
                             if ($ind === $match['indicator'] && isset($val[$match['ord']])) {
@@ -314,17 +325,24 @@ class Analyzer
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
                         $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
-                        $canStopIndicator = $priceStopIndicator && (
-                            $position->side === 'LONG' && $markPrice > $priceStopIndicator
-                            || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
+                        $canTakeIndicator = $priceTakeIndicator && (
+                            $position->side === 'LONG' && $markPrice > $priceTakeIndicator
+                            || $position->side === 'SHORT' && $markPrice < $priceTakeIndicator
+                        );
+                        $canStopIndicator = $canPositionLoss && $priceStopIndicator && (
+                            $position->side === 'LONG' && $markPrice < $priceStopIndicator
+                            || $position->side === 'SHORT' && $markPrice > $priceStopIndicator
                         );
                         $canGainLoss = true;
 
-                        if ($canStopIndicator && (
-                            $position->side === 'LONG' && $priceStopIndicator > $entryPrice
-                            || $position->side === 'SHORT' && $priceStopIndicator < $entryPrice
+                        if ($canTakeIndicator && (
+                            $position->side === 'LONG' && $priceTakeIndicator > $entryPrice
+                            || $position->side === 'SHORT' && $priceTakeIndicator < $entryPrice
                         )) {
+                            $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceTakeIndicator);
+                        }
 
+                        if ($canStopIndicator) {
                             $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
                         }
 

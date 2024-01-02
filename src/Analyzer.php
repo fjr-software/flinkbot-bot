@@ -384,8 +384,7 @@ class Analyzer
                     }
                 }
 
-
-                if (!$hasOrderLoss && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
+                if ($openOrder && !$hasOrderLoss && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                 }
 

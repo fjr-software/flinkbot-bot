@@ -321,7 +321,13 @@ class Analyzer
                         $canGainLoss = true;
 
                         if ($canStopIndicator) {
-                            $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
+                            if ($position->side === 'LONG' && $entryPrice > $priceStopIndicator
+                                || $position->side === 'SHORT' && $entryPrice < $priceStopIndicator
+                            ) {
+                                $diffIndicatorPrice = $this->bot->getExchange()->calculeProfit($entryPrice, $incrementTriggerPercentage / $multipleTrigger);
+                                $priceStopIndicator = (float) ($position->side === 'SHORT' ? $entryPrice - $diffIndicatorPrice : $entryPrice + $diffIndicatorPrice);
+                                $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
+                            }
                         }
 
                         if ($canPrevent) {

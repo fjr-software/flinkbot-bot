@@ -482,9 +482,9 @@ class Analyzer
                     ])->first();
 
                     $checkSideBot = strtoupper($this->bot->getConfig()->getOperationSide()) !== 'BOTH';
-                    $validSideBot = $checkSideBot ? $side === strtoupper($this->bot->getConfig()->getOperationSide()) : false;
+                    $validSideBot = $checkSideBot ?: $side === strtoupper($this->bot->getConfig()->getOperationSide());
                     $checkSideSymbol = $symbolConfig && $symbolConfig->side !== 'BOTH';
-                    $validSideSymbol = $checkSideSymbol ? $symbolConfig && $side === $symbolConfig->side : false;
+                    $validSideSymbol = $checkSideSymbol ?: $symbolConfig && $side === $symbolConfig->side;
                     $sideChecked = '';
 
                     if (!$validSideBot) {

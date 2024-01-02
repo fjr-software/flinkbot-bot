@@ -486,85 +486,99 @@ class Analyzer
                         'status' => 'active'
                     ])->first();
 
-                    $checkSideBot = strtoupper($this->bot->getConfig()->getOperationSide()) != 'BOTH';
-                    $checkSideSymbol = $symbolConfig->side != 'BOTH';
-                    $sideChecked = '';
-                    $validSideBot = true;
-                    $validSideSymbol = true;
+                    if ($symbolConfig) {
+                        $checkSideBot = strtoupper($this->bot->getConfig()->getOperationSide()) != 'BOTH';
+                        $checkSideSymbol = $symbolConfig->side != 'BOTH';
+                        $sideChecked = '';
+                        $validSideBot = true;
+                        $validSideSymbol = true;
 
-                    if ($checkSideBot) {
-                        $validSideBot = !($side != strtoupper($this->bot->getConfig()->getOperationSide()));
-                    }
+                        if ($checkSideBot) {
+                            $validSideBot = !($side != strtoupper($this->bot->getConfig()->getOperationSide()));
+                        }
 
-                    if ($checkSideSymbol) {
-                        $validSideSymbol = !($side != $symbolConfig->side);
-                    }
+                        if ($checkSideSymbol) {
+                            $validSideSymbol = !($side != $symbolConfig->side);
+                        }
 
-                    if (!$validSideBot) {
-                        $sideChecked = strtoupper($this->bot->getConfig()->getOperationSide());
-                    }
+                        if (!$validSideBot) {
+                            $sideChecked = strtoupper($this->bot->getConfig()->getOperationSide());
+                        }
 
-                    if (!$validSideSymbol) {
-                        $sideChecked = $symbolConfig->side;
-                    }
+                        if (!$validSideSymbol) {
+                            $sideChecked = $symbolConfig->side;
+                        }
 
-                    if ($symbolConfig && !$sideChecked) {
-                        $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
+                        if (!$sideChecked) {
+                            $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
 
-                        if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
-                            if ($this->bot->enableDebug()) {
-                                $message = "Recently closed {$side} order";
-
-                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
-
-                                echo "{$message}\n";
-                            }
-                        } else {
-                            $enableTradeAvg = true;
-
-                            if ($avgPriceOrder = $this->getAvgOrdersFilled($symbolConfig, $positionSideOrder)) {
-                                $enableTradeAvg = $positionSideOrder === 'LONG'
-                                    ? $price < $avgPriceOrder
-                                    : $price > $avgPriceOrder;
-                            }
-
-                            if ($enableTradeAvg) {
-                                $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
-                                    ? $symbolConfig->min_quantity
-                                    : $symbolConfig->base_quantity);
-
-                                $order = $this->bot->getExchange()->createOrder([
-                                    'symbol' => $symbol,
-                                    'side' => $sideOrder,
-                                    'positionSide' => $positionSideOrder,
-                                    'type' => 'LIMIT',
-                                    'timeInForce' => 'GTC',
-                                    'quantity' => $quantity,
-                                    'price' => (float) $price
-                                ]);
-                                $order['userId'] = $this->bot->getUserId();
-                                $order['symbolId'] = $symbolConfig->id;
-
-                                $this->updateOrCreateOrder($order);
-
+                            if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
                                 if ($this->bot->enableDebug()) {
-                                    $message = 'Open position';
+                                    $message = "Recently closed {$side} order";
 
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
                                     echo "{$message}\n";
                                 }
                             } else {
-                                $price = (float) $price;
-                                $avgPriceOrder = $this->bot->getExchange()->formatDecimal($price, $avgPriceOrder);
+                                $enableTradeAvg = true;
 
-                                if ($this->bot->enableDebug()) {
-                                    $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
-
-                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
-
-                                    echo "{$message}\n";
+                                if ($avgPriceOrder = $this->getAvgOrdersFilled($symbolConfig, $positionSideOrder)) {
+                                    $enableTradeAvg = $positionSideOrder === 'LONG'
+                                        ? $price < $avgPriceOrder
+                                        : $price > $avgPriceOrder;
                                 }
+
+                                if ($enableTradeAvg) {
+                                    $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
+                                        ? $symbolConfig->min_quantity
+                                        : $symbolConfig->base_quantity);
+
+                                    $order = $this->bot->getExchange()->createOrder([
+                                        'symbol' => $symbol,
+                                        'side' => $sideOrder,
+                                        'positionSide' => $positionSideOrder,
+                                        'type' => 'LIMIT',
+                                        'timeInForce' => 'GTC',
+                                        'quantity' => $quantity,
+                                        'price' => (float) $price
+                                    ]);
+                                    $order['userId'] = $this->bot->getUserId();
+                                    $order['symbolId'] = $symbolConfig->id;
+
+                                    $this->updateOrCreateOrder($order);
+
+                                    if ($this->bot->enableDebug()) {
+                                        $message = 'Open position';
+
+                                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                        echo "{$message}\n";
+                                    }
+                                } else {
+                                    $price = (float) $price;
+                                    $avgPriceOrder = $this->bot->getExchange()->formatDecimal($price, $avgPriceOrder);
+
+                                    if ($this->bot->enableDebug()) {
+                                        $message = "The current price is unfavorable[{$positionSideOrder}] - {$price} - {$avgPriceOrder}";
+
+                                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                        echo "{$message}\n";
+                                    }
+                                }
+                            }
+                        } else {
+                            if ($this->bot->enableDebug()) {
+                                $message = "Symbol {$symbol} not found";
+
+                                if ($sideChecked) {
+                                    $message = "{$side} different from {$sideChecked}";
+                                }
+
+                                $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                echo "{$message}\n";
                             }
                         }
                     } else {
@@ -580,6 +594,7 @@ class Analyzer
                             echo "{$message}\n";
                         }
                     }
+
                 } else {
                     $reason = '';
 

@@ -488,7 +488,7 @@ class Analyzer
                     $validSideSymbol = true;
 
                     if ($checkSideBot) {
-                        $validSideBot = !($side != strtoupper($botConfig->getOperationSide()));
+                        $validSideBot = !($side != strtoupper($this->bot->getConfig()->getOperationSide()));
                     }
 
                     if ($checkSideSymbol) {

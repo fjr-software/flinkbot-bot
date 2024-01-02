@@ -24,6 +24,7 @@ class Symbols extends Model
     protected $fillable = [
         'bot_id',
         'pair',
+        'side',
         'leverage',
         'max_margin',
         'status',

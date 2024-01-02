@@ -481,7 +481,21 @@ class Analyzer
                         'status' => 'active'
                     ])->first();
 
-                    if ($symbolConfig) {
+                    $checkSideBot = strtoupper($this->bot->getConfig()->getOperationSide()) !== 'BOTH';
+                    $validSideBot = $checkSideBot ? $side === strtoupper($this->bot->getConfig()->getOperationSide()) : false;
+                    $checkSideSymbol = $symbolConfig && $symbolConfig->side !== 'BOTH';
+                    $validSideSymbol = $checkSideSymbol ? $symbolConfig && $side === $symbolConfig->side : false;
+                    $sideChecked = '';
+
+                    if (!$validSideBot) {
+                        $sideChecked = strtoupper($this->bot->getConfig()->getOperationSide());
+                    }
+
+                    if (!$validSideSymbol) {
+                        $sideChecked = $symbolConfig->side;
+                    }
+
+                    if ($symbolConfig && !$sideChecked) {
                         $lastOrderFilled = $this->getLastOrderFilled($symbolConfig, $positionSideOrder);
 
                         if ($lastOrderFilled && !$this->isTimeBoxOrder($lastOrderFilled)) {
@@ -543,6 +557,10 @@ class Analyzer
                     } else {
                         if ($this->bot->enableDebug()) {
                             $message = "Symbol {$symbol} not found";
+
+                            if ($sideChecked) {
+                                $message = "{$side} different from {$sideChecked}";
+                            }
 
                             $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

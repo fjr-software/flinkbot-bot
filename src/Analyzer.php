@@ -329,7 +329,7 @@ class Analyzer
                             $position->side === 'LONG' && $markPrice > $priceTakeIndicator
                             || $position->side === 'SHORT' && $markPrice < $priceTakeIndicator
                         );
-                        $canStopIndicator = $canPositionLoss && $priceStopIndicator && (
+                        $canStopIndicator = $priceStopIndicator && (
                             $position->side === 'LONG' && $markPrice < $priceStopIndicator
                             || $position->side === 'SHORT' && $markPrice > $priceStopIndicator
                         );

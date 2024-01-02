@@ -327,6 +327,8 @@ class Analyzer
                                 $diffIndicatorPrice = $this->bot->getExchange()->calculeProfit($entryPrice, $incrementTriggerPercentage / $multipleTrigger);
                                 $priceStopIndicator = (float) ($position->side === 'SHORT' ? $entryPrice - $diffIndicatorPrice : $entryPrice + $diffIndicatorPrice);
                                 $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
+                            } else {
+                                $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
                             }
                         }
 

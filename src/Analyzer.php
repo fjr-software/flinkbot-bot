@@ -375,7 +375,21 @@ class Analyzer
                 }
             }
 
+            $hasOrderLoss = false;
+
             if ($canGainLoss) {
+                foreach ($openOrdersClosed as $openOrder) {
+                    if ($openOrder['origType'] === 'STOP_MARKET') {
+                        $hasOrderLoss = true;
+                    }
+                }
+
+
+                if (!$hasOrderLoss && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
+                    $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+                }
+
+
                 foreach ($openOrdersClosed as $openOrder) {
                     if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
                         continue;

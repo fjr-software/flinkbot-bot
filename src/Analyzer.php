@@ -342,7 +342,10 @@ class Analyzer
                             $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceTakeIndicator);
                         }
 
-                        if ($canStopIndicator) {
+                        if ($canStopIndicator && (
+                            $position->side === 'LONG' && $priceStopIndicator < $entryPrice
+                            || $position->side === 'SHORT' && $priceStopIndicator > $entryPrice
+                        )) {
                             $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
                         }
 

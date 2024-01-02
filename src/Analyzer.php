@@ -570,11 +570,7 @@ class Analyzer
                             }
                         } else {
                             if ($this->bot->enableDebug()) {
-                                $message = "Symbol {$symbol} not found";
-
-                                if ($sideChecked) {
-                                    $message = "{$side} different from {$sideChecked}";
-                                }
+                                $message = "{$side} different from {$sideChecked}";
 
                                 $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

@@ -344,7 +344,7 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if (!$canPrevent && !$openOrdersClosed) {
+                        if ((!$canPrevent || $priceStopIndicator) && !$openOrdersClosed) {
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 

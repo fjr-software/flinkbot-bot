@@ -314,12 +314,13 @@ class Analyzer
                         $openOrdersClosed = array_filter($openOrdersClosed, fn($order) => $order['side'] === $sideOrder);
                         $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
-                        $canGainLoss = true;
-
-                        if ($priceStopIndicator && (
+                        $canStopIndicator = $priceStopIndicator && (
                             $position->side === 'LONG' && $markPrice > $priceStopIndicator
                             || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
-                        )) {
+                        );
+                        $canGainLoss = true;
+
+                        if ($canStopIndicator) {
                             $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceStopIndicator);
                         }
 
@@ -344,7 +345,7 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if ((!$canPrevent || $priceStopIndicator) && !$openOrdersClosed) {
+                        if ((!$canPrevent || $canStopIndicator) && !$openOrdersClosed) {
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 

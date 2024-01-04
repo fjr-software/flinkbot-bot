@@ -370,22 +370,21 @@ class Analyzer
                             if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
                                 $percPartial = (float) $configPosition['partialOrderProfit']['percentage'];
                                 $qtyPartial = $position->size * ($percPartial / 100);
+                                $qtyPartial = $qtyPartial < $position->symbol->min_quantity ? $position->symbol->min_quantity : $qtyPartial;
 
-                                if ($qtyPartial >= $position->symbol->min_quantity) {
-                                    $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
-                                    $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
-                                    $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
+                                $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
+                                $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
+                                $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
 
-                                    $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
+                                $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
 
-                                    if ($this->bot->enableDebug()) {
-                                        $percent = (float) $position->pnl_roi_percent;
-                                        $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+                                if ($this->bot->enableDebug()) {
+                                    $percent = (float) $position->pnl_roi_percent;
+                                    $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
 
-                                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                                        echo "{$message}\n";
-                                    }
+                                    echo "{$message}\n";
                                 }
                             }
 

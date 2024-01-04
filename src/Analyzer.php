@@ -367,6 +367,18 @@ class Analyzer
                         ];
 
                         if (!$openOrdersClosed) {
+                            if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
+                                $qtyPartial = $position->size * ((float) $configPosition['partialOrderProfit']['percentage'] / 100);
+
+                                if ($qtyPartial >= $position->symbol->min_quantity) {
+                                    $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
+                                    $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
+                                    $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
+
+                                    $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
+                                }
+                            }
+
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
@@ -724,16 +736,17 @@ class Analyzer
      * @param string $side
      * @param float $price
      * @param bool $stop
+     * @param float|null $qty
      * @return void
      */
-    private function closePosition(string $symbol, string $side, float $price, bool $stop = false): void
+    private function closePosition(string $symbol, string $side, float $price, bool $stop = false, ?float $qty = null): void
     {
         $symbolConfig = Symbols::where([
             'bot_id' => $this->bot->getId(),
             'pair' => $symbol
         ])->first();
 
-        $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop);
+        $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop, $qty);
         $order['userId'] = $this->bot->getUserId();
         $order['symbolId'] = $symbolConfig->id;
 

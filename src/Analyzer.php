@@ -368,7 +368,8 @@ class Analyzer
 
                         if (!$openOrdersClosed) {
                             if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
-                                $qtyPartial = $position->size * ((float) $configPosition['partialOrderProfit']['percentage'] / 100);
+                                $percPartial = (float) $configPosition['partialOrderProfit']['percentage'];
+                                $qtyPartial = $position->size * ($percPartial / 100);
 
                                 if ($qtyPartial >= $position->symbol->min_quantity) {
                                     $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
@@ -376,6 +377,15 @@ class Analyzer
                                     $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
 
                                     $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
+
+                                    if ($this->bot->enableDebug()) {
+                                        $percent = (float) $position->pnl_roi_percent;
+                                        $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+
+                                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                        echo "{$message}\n";
+                                    }
                                 }
                             }
 

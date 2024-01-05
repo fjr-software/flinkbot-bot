@@ -462,8 +462,8 @@ class Analyzer
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
-                            && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price']
-                            && $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['price'])
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['qty'])
                             && (
                                 $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'] < $openOrder['stopPrice']
                                 || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'] > $openOrder['stopPrice']
@@ -476,7 +476,7 @@ class Analyzer
 
                             if ($diffTrigger >= 0.10) {
                                 if ($this->bot->enableDebug()) {
-                                    $message = 'Order timeout[trigger]';
+                                    $message = 'Order timeout[trigger] - partial';
 
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
@@ -518,7 +518,7 @@ class Analyzer
 
                             if ($diffTrigger >= 0.10) {
                                 if ($this->bot->enableDebug()) {
-                                    $message = 'Order timeout[trigger] - partial';
+                                    $message = 'Order timeout[trigger]';
 
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

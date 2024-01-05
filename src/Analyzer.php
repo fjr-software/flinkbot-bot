@@ -458,6 +458,7 @@ class Analyzer
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                 }
 
+                $partialOrderRenewed = false;
                 foreach ($openOrdersPartial as $openOrder) {
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         if (
@@ -492,6 +493,8 @@ class Analyzer
                                     false,
                                     $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
                                 );
+
+                                $partialOrderRenewed = true;
                             }
                         }
                     }
@@ -523,6 +526,18 @@ class Analyzer
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
                                     echo "{$message}\n";
+                                }
+
+                                if ($partialOrderRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price']
+                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                                ) {
+                                    $this->closePosition(
+                                        $openOrder['symbol'],
+                                        $openOrder['positionSide'],
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'],
+                                        false,
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                                    );
                                 }
 
                                 $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);

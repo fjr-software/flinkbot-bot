@@ -483,6 +483,8 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
                                 $this->closePosition(
                                     $openOrder['symbol'],
                                     $openOrder['positionSide'],
@@ -490,8 +492,6 @@ class Analyzer
                                     false,
                                     $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
                                 );
-
-                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                             }
                         }
                     }
@@ -525,9 +525,9 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
-
                                 $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
                             }
                         }
 
@@ -553,9 +553,9 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
-
                                 $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                             }
                         }
                     }

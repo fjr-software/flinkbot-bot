@@ -480,8 +480,6 @@ class Analyzer
                             ));
 
                             if ($diffTrigger >= 0.10) {
-                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
-
                                 if ($this->bot->enableDebug()) {
                                     $message = 'Order timeout[trigger]';
 
@@ -503,6 +501,8 @@ class Analyzer
                                 }
 
                                 $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['gain']);
+
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                             }
                         }
 
@@ -520,8 +520,6 @@ class Analyzer
                             ));
 
                             if ($diffTrigger >= 0.10) {
-                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
-
                                 if ($this->bot->enableDebug()) {
                                     $message = 'Order timeout[trigger]';
 
@@ -531,6 +529,8 @@ class Analyzer
                                 }
 
                                 $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
+
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                             }
                         }
                     }

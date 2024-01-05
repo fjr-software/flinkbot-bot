@@ -244,6 +244,19 @@ class Analyzer
                 }
             }
 
+            $hasOrderLoss = false;
+            $hasOrderGain = false;
+
+            foreach ($openOrdersClosed as $openOrder) {
+                if ($openOrder['origType'] === 'STOP_MARKET') {
+                    $hasOrderLoss = true;
+                }
+
+                if ($openOrder['origType'] === 'TAKE_PROFIT_MARKET') {
+                    $hasOrderGain = true;
+                }
+            }
+
             $pricesClosedPosition = [
                 'LONG' => [
                     'gain' => 0,
@@ -392,7 +405,7 @@ class Analyzer
                             ]
                         ];
 
-                        if (!$openOrdersClosed) {
+                        if (!$hasOrderGain) {
                             if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
                                 $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
 
@@ -409,7 +422,7 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if (!$canPrevent && !$openOrdersClosed) {
+                        if (!$canPrevent && !$hasOrderLoss) {
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 
@@ -440,19 +453,12 @@ class Analyzer
                 }
             }
 
-            $hasOrderLoss = false;
+
 
             if ($canGainLoss) {
-                foreach ($openOrdersClosed as $openOrder) {
-                    if ($openOrder['origType'] === 'STOP_MARKET') {
-                        $hasOrderLoss = true;
-                    }
-                }
-
                 if (($openOrder ?? false) && !$hasOrderLoss && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                 }
-
 
                 foreach ($openOrdersClosed as $openOrder) {
                     if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {

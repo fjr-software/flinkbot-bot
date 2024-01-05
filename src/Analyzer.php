@@ -375,7 +375,7 @@ class Analyzer
                                 $percPartial = (float) $configPosition['partialOrderProfit']['percentage'];
                                 $qtyPartial = (float) ($position->size * ($percPartial / 100));
                                 $qtyPartial = round($qtyPartial, (int) $symbolExchange['quantityPrecision']);
-                                $qtyPartial = $qtyPartial < $position->symbol->min_quantity ? $position->symbol->min_quantity : $qtyPartial;
+                                $qtyPartial = (float) ($qtyPartial < $position->symbol->min_quantity ? $position->symbol->min_quantity : $qtyPartial);
 
                                 $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
                                 $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);

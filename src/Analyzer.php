@@ -214,8 +214,8 @@ class Analyzer
             $bookBuy = $book['bids'][0];
             $bookSell = $book['asks'][0];
             $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
-            $openOrdersPartial = array_filter($openOrders, fn($order) => !$order['closePosition'] && $order['origType'] === 'TAKE_PROFIT_MARKET');
-            $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly']);
+            $openOrdersPartial = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition'] && $order['origType'] === 'TAKE_PROFIT_MARKET');
+            $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly'] && $order['closePosition']);
             $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
             $canGainLoss = false;
             $hasPosition = [

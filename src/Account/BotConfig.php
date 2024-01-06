@@ -49,6 +49,11 @@ class BotConfig
     private int $orderTriggerTimeout = 60;
 
     /**
+     * @var int
+     */
+    private int $orderLongTriggerTimeout = 3600;
+
+    /**
      * @var bool
      */
     private bool $enableHalfPriceProtection = false;
@@ -225,6 +230,29 @@ class BotConfig
     public function getOrderTriggerTimeout(): int
     {
         return $this->orderTriggerTimeout;
+    }
+
+    /**
+     * Set order long trigger timeout
+     *
+     * @param int $orderLongTriggerTimeout
+     * @return BotConfig
+     */
+    public function setOrderLongTriggerTimeout(int $orderLongTriggerTimeout): BotConfig
+    {
+        $this->orderLongTriggerTimeout = $orderLongTriggerTimeout;
+
+        return $this;
+    }
+
+    /**
+     * Get order long trigger timeout
+     *
+     * @return int
+     */
+    public function getOrderLongTriggerTimeout(): int
+    {
+        return $this->orderLongTriggerTimeout;
     }
 
     /**
@@ -533,6 +561,7 @@ class BotConfig
             $this->setInterval($config['interval'] ?? '15m');
             $this->setOrderCommonTimeout($config['orderCommonTimeout'] ?? 60);
             $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
+            $this->setOrderLongTriggerTimeout($config['orderLongTriggerTimeout'] ?? 3600);
             $this->setEnableHalfPriceProtection($config['enableHalfPriceProtection'] ?? false);
             $this->setIncrementTriggerPercentage($config['incrementTriggerPercentage'] ?? 0.0);
             $this->setMultiplierIncrementTrigger($config['multiplierIncrementTrigger'] ?? 1);

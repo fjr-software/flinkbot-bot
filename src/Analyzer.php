@@ -6,6 +6,7 @@ namespace FjrSoftware\Flinkbot\Bot;
 
 use DateTime;
 use Exception;
+use UnexpectedValueException;
 use FjrSoftware\Flinkbot\Bot\Account\Bot;
 use FjrSoftware\Flinkbot\Bot\Account\Log;
 use FjrSoftware\Flinkbot\Bot\Account\LogLevel;
@@ -860,19 +861,33 @@ class Analyzer
      * @param bool $stop
      * @param float|null $qty
      * @return void
+     * @throws Exception
      */
     private function closePosition(string $symbol, string $side, float $price, bool $stop = false, ?float $qty = null): void
     {
-        $symbolConfig = Symbols::where([
-            'bot_id' => $this->bot->getId(),
-            'pair' => $symbol
-        ])->first();
+        try {
+            $symbolConfig = Symbols::where([
+                'bot_id' => $this->bot->getId(),
+                'pair' => $symbol
+            ])->first();
 
-        $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop, $qty);
-        $order['userId'] = $this->bot->getUserId();
-        $order['symbolId'] = $symbolConfig->id;
+            $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop, $qty);
+            $order['userId'] = $this->bot->getUserId();
+            $order['symbolId'] = $symbolConfig->id;
 
-        $this->updateOrCreateOrder($order);
+            $this->updateOrCreateOrder($order);
+        } catch (UnexpectedValueException $e) {
+            if (str_contains($e->getMessage(), 'Order would immediately trigger')) {
+                $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
+                $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
+
+                $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $this->bot->getConfig()->getIncrementTriggerPercentage());
+                $newPrice = (float) ($side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                $price = $this->bot->getExchange()->formatDecimal($markPrice, $newPrice);
+
+                $this->closePosition($symbol, $side, $price, $stop, $qty);
+            }
+        }
     }
 
     /**

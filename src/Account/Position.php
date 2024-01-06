@@ -62,6 +62,7 @@ class Position
 
                     if ($position['markPrice']) {
                         $entryPrice = round((float) $position['entryPrice'], (int) $symbolExchange['pricePrecision']);
+                        $breakEvenPrice = round((float) $position['breakEvenPrice'], (int) $symbolExchange['pricePrecision']);
                         $markPrice = round((float) $position['markPrice'], (int) $symbolExchange['pricePrecision']);
                         $liquidationPrice = round((float) $position['liquidationPrice'], (int) $symbolExchange['pricePrecision']);
 
@@ -82,6 +83,7 @@ class Position
                             'leverage' => (int) $position['leverage'],
                             'side' => $position['positionSide'],
                             'entryPrice' => $entryPrice,
+                            'break_even_price' => $breakEvenPrice,
                             'size' => $size,
                             'roiPercent' => $roiPercent,
                             'unRealizedProfit' => (float) $position['unRealizedProfit'],

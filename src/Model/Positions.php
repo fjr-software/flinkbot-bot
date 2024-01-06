@@ -27,6 +27,7 @@ class Positions extends Model
         'leverage',
         'side',
         'entry_price',
+        'break_even_price',
         'size',
         'pnl_roi_percent',
         'pnl_roi_value',

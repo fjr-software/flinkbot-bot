@@ -330,6 +330,11 @@ class Analyzer
 
                         $markPrice = (float) ($markPrice ?? $position->mark_price);
                         $entryPrice = (float) $position->entry_price;
+                        $breakEvenPrice = (float) $position->break_even_price;
+
+                        if ($this->bot->getConfig()->getPosition()['useBreakEvenPoint'] && $breakEvenPrice > 0) {
+                            $entryPrice = $breakEvenPrice;
+                        }
 
                         $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage);
                         $priceCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);

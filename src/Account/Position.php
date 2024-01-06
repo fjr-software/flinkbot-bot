@@ -83,7 +83,7 @@ class Position
                             'leverage' => (int) $position['leverage'],
                             'side' => $position['positionSide'],
                             'entryPrice' => $entryPrice,
-                            'break_even_price' => $breakEvenPrice,
+                            'breakEvenPrice' => $breakEvenPrice,
                             'size' => $size,
                             'roiPercent' => $roiPercent,
                             'unRealizedProfit' => (float) $position['unRealizedProfit'],
@@ -155,6 +155,7 @@ class Position
             [
                 'leverage' => $data['leverage'],
                 'entry_price' => (float) $data['entryPrice'],
+                'break_even_price' => (float) $data['breakEvenPrice'],
                 'size' => $data['size'],
                 'pnl_roi_percent' => $data['roiPercent'],
                 'pnl_roi_value' => (float) $data['unRealizedProfit'],

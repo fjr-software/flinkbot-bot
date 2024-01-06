@@ -742,7 +742,6 @@ class Analyzer
 
                         echo "{$message}\n";
                     }
-
                 }
             }
         } catch (Exception $e) {
@@ -886,6 +885,14 @@ class Analyzer
                 $price = $this->bot->getExchange()->formatDecimal($markPrice, $newPrice);
 
                 $this->closePosition($symbol, $side, $price, $stop, $qty);
+
+                if ($this->bot->enableDebug()) {
+                    $message = "Recreating order with new price[$side]";
+
+                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                    echo "{$message}\n";
+                }
             }
         }
     }

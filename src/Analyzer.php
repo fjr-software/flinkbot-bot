@@ -506,18 +506,6 @@ class Analyzer
                 }
 
                 foreach ($openOrdersClosed as $openOrder) {
-                    if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderLongTriggerTimeout())) {
-                        if ($this->bot->enableDebug()) {
-                            $message = 'Order timeout[trigger] - long time';
-
-                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
-
-                            echo "{$message}\n";
-                        }
-
-                        $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
-                    }
-
                     if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
                         continue;
                     }
@@ -590,6 +578,20 @@ class Analyzer
                                 $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                             }
                         }
+                    }
+                }
+            } else {
+                foreach ($openOrdersClosed as $openOrder) {
+                    if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderLongTriggerTimeout())) {
+                        if ($this->bot->enableDebug()) {
+                            $message = 'Order timeout[trigger] - long time';
+
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
+                        }
+
+                        $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                     }
                 }
             }

@@ -745,7 +745,7 @@ class Analyzer
                 }
             }
         } catch (Exception $e) {
-            echo "Error: " . $e->getMessage() . "\n";
+            echo $e->getMessage() . "\n";
         }
     }
 

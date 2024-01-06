@@ -460,7 +460,15 @@ class Analyzer
             }
 
             if ($canGainLoss) {
-                if (($openOrder ?? false) && !$hasOrderLoss && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
+                if (($openOrder ?? false) && !$hasOrderLoss
+                    && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())
+                    && $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
+                    && $pricesClosedPosition[$openOrder['positionSide']]['gain']
+                    && (
+                        $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] < $openOrder['stopPrice']
+                        || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['gain'] > $openOrder['stopPrice']
+                    )
+                ) {
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                 }
 

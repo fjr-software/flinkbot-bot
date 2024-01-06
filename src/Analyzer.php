@@ -528,7 +528,7 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                if ($partialOrderRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price']
+                                if (!$partialOrderRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price']
                                     && $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
                                 ) {
                                     $this->closePosition(

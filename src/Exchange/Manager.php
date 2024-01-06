@@ -36,6 +36,8 @@ class Manager
      */
     public function getExchange(): ExchangeInterface
     {
+        $this->init();
+
         return $this->exchange;
     }
 

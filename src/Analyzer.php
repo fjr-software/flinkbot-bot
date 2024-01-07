@@ -277,9 +277,14 @@ class Analyzer
                     ]
                 ]
             ];
+            $marginSymbolQty = [
+                'LONG' => 0,
+                'SHORT' => 0
+            ];
 
             foreach ($positions as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
+                $marginSymbolQty[$position->side] = $position->size;
                 $marginSymbol[$position->side] = [
                     'usage' => $position->margin_symbol_percent,
                     'limit' => $position->symbol->max_margin
@@ -606,33 +611,38 @@ class Analyzer
             }
 
             if ($side) {
-                $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
-                $limitMarginSymbol = (
-                    $marginSymbol[$side]['usage'] < $this->bot->getConfig()->getMargin()['symbol']
-                ) && (
-                    !$marginSymbol[$side]['limit']
-                    || ($marginSymbol[$side]['limit'] && $marginSymbol[$side]['usage'] < $marginSymbol[$side]['limit'])
-                );
-                $limitMargin = $limitMarginAccount && $limitMarginSymbol;
+                $symbolConfig = Symbols::where([
+                    'bot_id' => $this->bot->getId(),
+                    'pair' => $symbol,
+                    'status' => 'active'
+                ])->first();
 
-                if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {
-                    $price = $bookSell[0];
-                    $sideOrder = 'SELL';
-                    $positionSideOrder = 'SHORT';
+                if ($symbolConfig) {
+                    $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
+                        ? $symbolConfig->min_quantity
+                        : $symbolConfig->base_quantity);
+                    $simulatedUsageMargin = $marginSymbol[$side]['usage'] / ($marginSymbolQty[$side] / $quantity);
 
-                    if ($side === 'LONG') {
-                        $price = $bookBuy[0];
-                        $sideOrder = 'BUY';
-                        $positionSideOrder = 'LONG';
-                    }
+                    $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
+                    $limitMarginSymbol = (
+                        ($marginSymbol[$side]['usage'] + $simulatedUsageMargin) < $this->bot->getConfig()->getMargin()['symbol']
+                    ) && (
+                        !$marginSymbol[$side]['limit']
+                        || ($marginSymbol[$side]['limit'] && ($marginSymbol[$side]['usage'] + $simulatedUsageMargin) < $marginSymbol[$side]['limit'])
+                    );
+                    $limitMargin = $limitMarginAccount && $limitMarginSymbol;
 
-                    $symbolConfig = Symbols::where([
-                        'bot_id' => $this->bot->getId(),
-                        'pair' => $symbol,
-                        'status' => 'active'
-                    ])->first();
+                    if (!$openOrders && (!$hasPosition[$side] || $limitMargin)) {
+                        $price = $bookSell[0];
+                        $sideOrder = 'SELL';
+                        $positionSideOrder = 'SHORT';
 
-                    if ($symbolConfig) {
+                        if ($side === 'LONG') {
+                            $price = $bookBuy[0];
+                            $sideOrder = 'BUY';
+                            $positionSideOrder = 'LONG';
+                        }
+
                         $checkSideBot = strtoupper($this->bot->getConfig()->getOperationSide()) != 'BOTH';
                         $checkSideSymbol = $symbolConfig->side != 'BOTH';
                         $sideChecked = '';
@@ -676,10 +686,6 @@ class Analyzer
                                 }
 
                                 if ($enableTradeAvg) {
-                                    $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
-                                        ? $symbolConfig->min_quantity
-                                        : $symbolConfig->base_quantity);
-
                                     $order = $this->bot->getExchange()->createOrder([
                                         'symbol' => $symbol,
                                         'side' => $sideOrder,
@@ -724,8 +730,18 @@ class Analyzer
                             }
                         }
                     } else {
+                        $reason = '';
+
+                        if (!$limitMargin) {
+                            $reason = !$limitMarginAccount ? 'marginAccount' : 'marginSymbol';
+                        }
+
+                        if ($openOrders) {
+                            $reason = 'openOrders';
+                        }
+
                         if ($this->bot->enableDebug()) {
-                            $message = "Symbol {$symbol} not found";
+                            $message = "Without {$side} operation[$reason]";
 
                             $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
@@ -733,18 +749,8 @@ class Analyzer
                         }
                     }
                 } else {
-                    $reason = '';
-
-                    if (!$limitMargin) {
-                        $reason = !$limitMarginAccount ? 'marginAccount' : 'marginSymbol';
-                    }
-
-                    if ($openOrders) {
-                        $reason = 'openOrders';
-                    }
-
                     if ($this->bot->enableDebug()) {
-                        $message = "Without {$side} operation[$reason]";
+                        $message = "Symbol {$symbol} not found";
 
                         $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

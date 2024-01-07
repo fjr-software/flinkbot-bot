@@ -215,9 +215,8 @@ class Analyzer
             $bookBuy = $book['bids'][0];
             $bookSell = $book['asks'][0];
             $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
-            $openOrdersPartial = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition'] && $order['origType'] === 'TAKE_PROFIT_MARKET');
+            $openOrdersPartial = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition']);
             $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly'] && $order['closePosition']);
-            $openOrdersReduce = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition']);
             $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
             $canGainLoss = false;
             $hasPosition = [
@@ -261,30 +260,33 @@ class Analyzer
                 }
             }
 
-            if ($configPosition['partialOrderProfit']['enabled']) {
-                foreach ($openOrdersReduce as $openOrder) {
-                    if ($openOrder['origType'] === 'STOP_MARKET') {
-                        $openOrdersClosed[] = $openOrder;
-                        $hasOrderLoss = true;
-                    }
-                }
-            }
-
             $pricesClosedPosition = [
                 'LONG' => [
                     'gain' => 0,
                     'loss' => 0,
                     'partial' => [
-                        'price' => 0,
-                        'qty' => 0
+                        'take' => [
+                            'price' => 0,
+                            'qty' => 0
+                        ],
+                        'stop' => [
+                            'price' => 0,
+                            'qty' => 0
+                        ]
                     ]
                 ],
                 'SHORT' => [
                     'gain' => 0,
                     'loss' => 0,
                     'partial' => [
-                        'price' => 0,
-                        'qty' => 0
+                        'take' => [
+                            'price' => 0,
+                            'qty' => 0
+                        ],
+                        'stop' => [
+                            'price' => 0,
+                            'qty' => 0
+                        ]
                     ]
                 ]
             ];
@@ -425,6 +427,9 @@ class Analyzer
                                 $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage / 2);
                                 $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
                                 $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
+
+                                $pricePartialCloseStopGain = $priceCloseStopGain;
+                                $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
                             }
                         }
 
@@ -432,8 +437,14 @@ class Analyzer
                             'gain' => $priceCloseGain,
                             'loss' => $priceCloseStopGain,
                             'partial' => [
-                                'price' => $pricePartialCloseGain ?? 0,
-                                'qty' => $qtyPartial ?? 0
+                                'take' => [
+                                    'price' => $pricePartialCloseGain ?? 0,
+                                    'qty' => $qtyPartial ?? 0
+                                ],
+                                'stop' => [
+                                    'price' => $pricePartialCloseStopGain ?? 0,
+                                    'qty' => $qtyPartial ?? 0
+                                ]
                             ]
                         ];
 
@@ -455,7 +466,11 @@ class Analyzer
                         }
 
                         if (!$canPrevent && !$hasOrderLoss) {
-                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true, $qtyPartial);
+                            if ($configPosition['partialOrderProfit']['enabled']) {
+                                $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
+                            }
+
+                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
                         }
 
                         if ($this->bot->enableDebug()) {
@@ -498,20 +513,21 @@ class Analyzer
                     $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
                 }
 
-                $partialOrderRenewed = false;
+                $partialOrderTakeRenewed = false;
+                $partialOrderStopRenewed = false;
                 foreach ($openOrdersPartial as $openOrder) {
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
-                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['price'])
-                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['qty'])
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'])
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty'])
                             && (
-                                $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'] < $openOrder['stopPrice']
-                                || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'] > $openOrder['stopPrice']
+                                $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] < $openOrder['stopPrice']
+                                || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] > $openOrder['stopPrice']
                             )
                         ) {
                             $diffTrigger = abs($this->bot->getExchange()->percentage(
-                                (float) $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'],
+                                (float) $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'],
                                 (float) $openOrder['stopPrice']
                             ));
 
@@ -529,12 +545,49 @@ class Analyzer
                                 $this->closePosition(
                                     $openOrder['symbol'],
                                     $openOrder['positionSide'],
-                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'],
+                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'],
                                     false,
-                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty']
                                 );
 
-                                $partialOrderRenewed = true;
+                                $partialOrderTakeRenewed = true;
+                            }
+                        }
+
+                        if (
+                            $openOrder['origType'] === 'STOP_MARKET'
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'])
+                            && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty'])
+                            && (
+                                $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] < $openOrder['stopPrice']
+                                || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] > $openOrder['stopPrice']
+                            )
+                        ) {
+                            $diffTrigger = abs($this->bot->getExchange()->percentage(
+                                (float) $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'],
+                                (float) $openOrder['stopPrice']
+                            ));
+
+                            if ($diffTrigger >= 0.10) {
+                                if ($this->bot->enableDebug()) {
+                                    $message = 'Order timeout[trigger] - partial';
+
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                    echo "{$message}\n";
+                                }
+
+                                $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
+
+                                $this->closePosition(
+                                    $openOrder['symbol'],
+                                    $openOrder['positionSide'],
+                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'],
+                                    true,
+                                    $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty']
+                                );
+
+                                $partialOrderStopRenewed = true;
                             }
                         }
                     }
@@ -568,15 +621,15 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                if (!$partialOrderRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['price']
-                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                                if (!$partialOrderTakeRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price']
+                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty']
                                 ) {
                                     $this->closePosition(
                                         $openOrder['symbol'],
                                         $openOrder['positionSide'],
-                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['price'],
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'],
                                         false,
-                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['qty']
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty']
                                     );
                                 }
 
@@ -606,6 +659,18 @@ class Analyzer
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
                                     echo "{$message}\n";
+                                }
+
+                                if (!$partialOrderStopRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price']
+                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty']
+                                ) {
+                                    $this->closePosition(
+                                        $openOrder['symbol'],
+                                        $openOrder['positionSide'],
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'],
+                                        true,
+                                        $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty']
+                                    );
                                 }
 
                                 $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);

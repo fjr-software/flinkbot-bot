@@ -264,6 +264,7 @@ class Analyzer
             if ($configPosition['partialOrderProfit']['enabled']) {
                 foreach ($openOrdersReduce as $openOrder) {
                     if ($openOrder['origType'] === 'STOP_MARKET') {
+                        $openOrdersClosed[] = $openOrder;
                         $hasOrderLoss = true;
                     }
                 }

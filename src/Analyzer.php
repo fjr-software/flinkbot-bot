@@ -465,9 +465,18 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if (!$canPrevent && !$hasOrderLoss) {
-                            if ($configPosition['partialOrderProfit']['enabled']) {
+                        if (!$hasOrderLoss) {
+                            if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
                                 $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
+
+                                if ($this->bot->enableDebug()) {
+                                    $percent = (float) $position->pnl_roi_percent;
+                                    $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+
+                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                                    echo "{$message}\n";
+                                }
                             }
 
                             $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);

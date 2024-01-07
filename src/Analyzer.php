@@ -674,9 +674,8 @@ class Analyzer
                                 }
 
                                 $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $openOrder['orderId']);
-                                $qty = ($openOrder['origQty'] ? (float) $openOrder['origQty'] : null);
 
-                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true, $qty);
+                                $this->closePosition($openOrder['symbol'], $openOrder['positionSide'], $pricesClosedPosition[$openOrder['positionSide']]['loss'], true);
                             }
                         }
                     }

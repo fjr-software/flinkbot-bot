@@ -454,7 +454,7 @@ class Analyzer
 
                                 if ($this->bot->enableDebug()) {
                                     $percent = (float) $position->pnl_roi_percent;
-                                    $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+                                    $message = "Partial-take {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
 
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
@@ -471,7 +471,7 @@ class Analyzer
 
                                 if ($this->bot->enableDebug()) {
                                     $percent = (float) $position->pnl_roi_percent;
-                                    $message = "Partial {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+                                    $message = "Partial-stop {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
 
                                     $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 

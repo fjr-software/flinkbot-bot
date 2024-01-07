@@ -329,11 +329,14 @@ class Analyzer
                     }
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
-                        $multipleTrigger = $canPositionTrade ? $this->bot->getConfig()->getMultiplierIncrementTrigger() : 1;
-                        $incrementTriggerPercentage = $this->bot->getConfig()->getIncrementTriggerPercentage() * $multipleTrigger;
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
-                        $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
+                        $priceChangePercent = abs((float) $staticsTicker['priceChangePercent']);
+                        $factorVolatility = floor(($priceChangePercent / ($configPosition['profit'] / $position->leverage)) / 2.5);
+                        $multipleTrigger = $canPositionTrade ? $this->bot->getConfig()->getMultiplierIncrementTrigger() : 1;
+                        $multipleTrigger += $factorVolatility;
+                        $incrementTriggerPercentage = $this->bot->getConfig()->getIncrementTriggerPercentage() * $multipleTrigger;
 
+                        $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
                         $markPrice = (float) ($markPrice ?? $position->mark_price);
                         $entryPrice = (float) $position->entry_price;
                         $breakEvenPrice = (float) $position->break_even_price;

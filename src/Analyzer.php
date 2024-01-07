@@ -429,7 +429,8 @@ class Analyzer
                                 $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
 
                                 $pricePartialCloseStopGain = $priceCloseStopGain;
-                                $priceCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
+                                $priceCloseStopGain = ($pricePartialCloseStopGain + $entryPrice) / 2;
+                                $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
                             }
                         }
 

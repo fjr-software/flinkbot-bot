@@ -621,7 +621,8 @@ class Analyzer
                     $quantity = (float) ($symbolConfig->base_quantity < $symbolConfig->min_quantity
                         ? $symbolConfig->min_quantity
                         : $symbolConfig->base_quantity);
-                    $simulatedUsageMargin = $marginSymbol[$side]['usage'] / ($marginSymbolQty[$side] / $quantity);
+                    $qtyEntries = ($marginSymbolQty[$side] > 0 ? $marginSymbolQty[$side] / $quantity : 0);
+                    $simulatedUsageMargin = ($qtyEntries > 0 ? $marginSymbol[$side]['usage'] / $qtyEntries : 0);
 
                     $limitMarginAccount = $marginAccountPercent < $this->bot->getConfig()->getMargin()['account'];
                     $limitMarginSymbol = (

@@ -681,7 +681,7 @@ class Analyzer
                     }
                 }
             } else {
-                foreach ([$openOrdersClosed+$openOrdersPartial] as $openOrder) {
+                foreach ($openOrdersClosed+$openOrdersPartial as $openOrder) {
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderLongTriggerTimeout())) {
                         if ($this->bot->enableDebug()) {
                             $message = 'Order timeout[trigger] - long time';

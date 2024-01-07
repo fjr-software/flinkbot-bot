@@ -341,7 +341,12 @@ class Analyzer
                         $entryPrice = (float) $position->entry_price;
                         $breakEvenPrice = (float) $position->break_even_price;
 
-                        if ($this->bot->getConfig()->getPosition()['useBreakEvenPoint'] && $breakEvenPrice > 0) {
+                        if ($this->bot->getConfig()->getPosition()['useBreakEvenPoint'] && $breakEvenPrice > 0
+                            && (
+                                $position->side === 'LONG' && $breakEvenPrice > $entryPrice
+                                || $position->side === 'SHORT' && $breakEvenPrice < $entryPrice
+                            )
+                        ) {
                             $entryPrice = $breakEvenPrice;
                         }
 

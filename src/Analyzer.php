@@ -621,8 +621,13 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                if (!$partialOrderTakeRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price']
-                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty']
+                                if (!$partialOrderTakeRenewed
+                                    && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'])
+                                    && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty'])
+                                    && (
+                                        $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] < $openOrder['stopPrice']
+                                        || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] > $openOrder['stopPrice']
+                                    )
                                 ) {
                                     $this->closePosition(
                                         $openOrder['symbol'],
@@ -661,8 +666,13 @@ class Analyzer
                                     echo "{$message}\n";
                                 }
 
-                                if (!$partialOrderStopRenewed && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price']
-                                    && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty']
+                                if (!$partialOrderStopRenewed
+                                    && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'])
+                                    && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty'])
+                                    && (
+                                        $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] < $openOrder['stopPrice']
+                                        || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] > $openOrder['stopPrice']
+                                    )
                                 ) {
                                     $this->closePosition(
                                         $openOrder['symbol'],

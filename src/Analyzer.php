@@ -370,6 +370,7 @@ class Analyzer
                             || $position->side === 'SHORT' && $markPrice > $priceStopIndicator
                         );
                         $canGainLoss = true;
+                        $qtyPartial = null;
 
                         if ($canTakeIndicator && (
                             $position->side === 'LONG' && $priceTakeIndicator > $entryPrice
@@ -437,7 +438,7 @@ class Analyzer
                         }
 
                         if (!$canPrevent && !$hasOrderLoss) {
-                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true, $qtyPartial);
                         }
 
                         if ($this->bot->enableDebug()) {

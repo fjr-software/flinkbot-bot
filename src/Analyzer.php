@@ -217,6 +217,7 @@ class Analyzer
             $openOrders = $this->bot->getExchange()->getOpenOrders($symbol);
             $openOrdersPartial = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition'] && $order['origType'] === 'TAKE_PROFIT_MARKET');
             $openOrdersClosed = array_filter($openOrders, fn($order) => $order['reduceOnly'] && $order['closePosition']);
+            $openOrdersReduce = array_filter($openOrders, fn($order) => $order['reduceOnly'] && !$order['closePosition']);
             $openOrders = array_filter($openOrders, fn($order) => !$order['reduceOnly']);
             $canGainLoss = false;
             $hasPosition = [
@@ -233,6 +234,7 @@ class Analyzer
                 'SHORT' => null
             ];
             $positions = $this->position->get($symbol);
+            $configPosition = $this->bot->getConfig()->getPosition();
             $checkCollateralForProfitClosure = (bool) ($this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false);
             $collateralCheckDisableThreshold = (float) ($this->bot->getConfig()->getPosition()['collateralCheckDisableThreshold'] ?? 0);
             $collateralCheckDisableThreshold /= 100;
@@ -256,6 +258,14 @@ class Analyzer
 
                 if ($openOrder['origType'] === 'TAKE_PROFIT_MARKET') {
                     $hasOrderGain = true;
+                }
+            }
+
+            if ($configPosition['partialOrderProfit']['enabled']) {
+                foreach ($openOrdersReduce as $openOrder) {
+                    if ($openOrder['origType'] === 'STOP_MARKET') {
+                        $hasOrderLoss = true;
+                    }
                 }
             }
 
@@ -290,7 +300,6 @@ class Analyzer
                     'limit' => $position->symbol->max_margin
                 ];
 
-                $configPosition = $this->bot->getConfig()->getPosition();
                 $canPositionGain = $configPosition['profit'] > 0
                     && $position->pnl_roi_percent >= $configPosition['profit']
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];

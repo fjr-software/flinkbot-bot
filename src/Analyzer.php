@@ -403,7 +403,9 @@ class Analyzer
                             $typeClosed = 'prevent';
                         }
 
-                        if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
+                        if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']
+                            && $position->size > $position->symbol->min_quantity
+                        ) {
                             if ($symbolExchange = $this->getSymbolExchange($position->symbol->pair)) {
                                 $percPartial = (float) $configPosition['partialOrderProfit']['percentage'];
                                 $qtyPartial = (float) ($position->size * ($percPartial / 100));

@@ -330,7 +330,7 @@ class Analyzer
 
                     if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
-                        $priceChangePercent = abs((float) $staticsTicker['priceChangePercent']);
+                        $priceChangePercent = abs($this->bot->getExchange()->percentage((float) $staticsTicker['highPrice'], (float) $staticsTicker['lowPrice']));
                         $factorVolatility = floor(($priceChangePercent / ($configPosition['profit'] / $position->leverage)) / 2.5);
                         $multipleTrigger = $canPositionTrade ? $this->bot->getConfig()->getMultiplierIncrementTrigger() : 1;
                         $multipleTrigger += $factorVolatility;
@@ -404,7 +404,7 @@ class Analyzer
                                 $qtyPartial = round($qtyPartial, (int) $symbolExchange['quantityPrecision']);
                                 $qtyPartial = (float) ($qtyPartial < $position->symbol->min_quantity ? $position->symbol->min_quantity : $qtyPartial);
 
-                                $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, (float) $this->bot->getConfig()->getIncrementTriggerPercentage());
+                                $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage / 2);
                                 $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
                                 $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
                             }

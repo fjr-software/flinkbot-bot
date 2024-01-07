@@ -515,7 +515,14 @@ class Analyzer
 
                 $partialOrderTakeRenewed = false;
                 $partialOrderStopRenewed = false;
+                $openOrdersPartialIds = [
+                    'take' => [],
+                    'stop' => []
+                ];
                 foreach ($openOrdersPartial as $openOrder) {
+                    $typePartial = $openOrder['origType'] === 'TAKE_PROFIT_MARKET' ? 'take' : 'stop';
+                    $openOrdersPartialIds[$typePartial][] = $openOrder['orderId'];
+
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
@@ -629,6 +636,12 @@ class Analyzer
                                         || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] > $openOrder['stopPrice']
                                     )
                                 ) {
+                                    if ($openOrdersPartialIds['take']) {
+                                        foreach ($openOrdersPartialIds['take'] as $ids) {
+                                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $ids);
+                                        }
+                                    }
+
                                     $this->closePosition(
                                         $openOrder['symbol'],
                                         $openOrder['positionSide'],
@@ -674,6 +687,12 @@ class Analyzer
                                         || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] > $openOrder['stopPrice']
                                     )
                                 ) {
+                                    if ($openOrdersPartialIds['stop']) {
+                                        foreach ($openOrdersPartialIds['stop'] as $ids) {
+                                            $this->bot->getExchange()->cancelOrder($openOrder['symbol'], (string) $ids);
+                                        }
+                                    }
+
                                     $this->closePosition(
                                         $openOrder['symbol'],
                                         $openOrder['positionSide'],

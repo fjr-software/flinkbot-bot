@@ -138,10 +138,12 @@ class Analyzer
             $this->updateOrder($symbol);
 
             $candles = $this->bot->getExchange()->getCandles($symbol, $this->bot->getConfig()->getInterval(), 100);
+            $highs = $this->bot->getExchange()->getHighPrice($candles);
+            $lows = $this->bot->getExchange()->getLowPrice($candles);
             $closes = $this->bot->getExchange()->getClosePrice($candles);
             $current = $this->bot->getExchange()->getCurrentValue($candles, 'close');
 
-            $indicators = $this->bot->getConfig()->getIndicator($closes, $current);
+            $indicators = $this->bot->getConfig()->getIndicator([$highs, $lows, $closes], $current);
             $debugValues = ['Current: ' . $current];
             $priceTakeIndicator = 0;
             $priceStopIndicator = 0;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
+use FjrSoftware\Flinkbot\Indicator\Aroon;
 use FjrSoftware\Flinkbot\Indicator\Condition;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageEMA;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
@@ -16,6 +17,7 @@ class BotConfig
         'MovingAverageEMA' => MovingAverageEMA::class,
         'MovingAverageSMA' => MovingAverageSMA::class,
         'StochasticRSI' => StochasticRSI::class,
+        'Aroon' => Aroon::class,
     ];
 
     /**

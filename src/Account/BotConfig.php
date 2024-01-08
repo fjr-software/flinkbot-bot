@@ -421,7 +421,12 @@ class BotConfig
             $indicatorClass = self::ALLOWED_INDICATORS[$indicator];
 
             foreach ($config as $params) {
-                $instance = new $indicatorClass($values, ...$params);
+                if ($values[0][0] ?? false) {
+                    $instance = new $indicatorClass(...$values, ...$params);
+                } else {
+                    $instance = new $indicatorClass($values, ...$params);
+                }
+
                 $instance->setSymbolPrice($currentValue);
 
                 $result[$indicator][] = $instance;
@@ -438,7 +443,13 @@ class BotConfig
 
             foreach ($conditionsLong as $conditionKey => $condition) {
                 $indicatorList = $countLong === 1 ? $list : $list[$conditionKey];
-                $value = $this->getValue((string) $condition['condition']['value'], $list);
+
+                if (is_array($condition['condition']['value'])) {
+                    $value = $this->handleValues($condition['condition']['value'], $list);
+                } else {
+                    $value = $this->getValue((string) $condition['condition']['value'], $list);
+                }
+
                 $operator = $condition['condition']['operator'];
                 $resultConditions['long'][$indicator][] = (new Condition($indicatorList, $operator, $value))->isSatisfied();
             }
@@ -447,7 +458,13 @@ class BotConfig
 
             foreach ($conditionsShort as $conditionKey => $condition) {
                 $indicatorList = $countShort === 1 ? $list : $list[$conditionKey];
-                $value = $this->getValue((string) $condition['condition']['value'], $list);
+
+                if (is_array($condition['condition']['value'])) {
+                    $value = $this->handleValues($condition['condition']['value'], $list);
+                } else {
+                    $value = $this->getValue((string) $condition['condition']['value'], $list);
+                }
+
                 $operator = $condition['condition']['operator'];
                 $resultConditions['short'][$indicator][] = (new Condition($indicatorList, $operator, $value))->isSatisfied();
             }
@@ -506,6 +523,23 @@ class BotConfig
     }
 
     /**
+     * Handle values
+     *
+     * @param array $values
+     * @param array $list
+     */
+    private function handleValues(array $values, array $list): array
+    {
+        $result = [];
+
+        foreach ($values as $value) {
+            $result[] = $this->getValue((string) $value, $list);
+        }
+
+        return $result;
+    }
+
+    /**
      * Get value based on syntax
      *
      * @param string $value
@@ -528,7 +562,7 @@ class BotConfig
             $valueAdd = $value * $valueAdd;
             $value += $valueAdd;
 
-            return $value;
+            return (float) $value;
         }
 
         if (preg_match('/@SYMBOL_PRICE@SUB_PERC_(?<value>[0-9\.]+)/i', $value, $match)) {
@@ -537,7 +571,7 @@ class BotConfig
             $valueSub = $value * $valueSub;
             $value -= $valueSub;
 
-            return $value;
+            return (float) $value;
         }
 
         if (preg_match('/@INDICATOR\_(?<name>[a-z]+)\_(?<key>[0-9]+)/i', $value, $match)) {

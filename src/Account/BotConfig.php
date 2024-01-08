@@ -421,11 +421,7 @@ class BotConfig
             $indicatorClass = self::ALLOWED_INDICATORS[$indicator];
 
             foreach ($config as $params) {
-                if ($values[0][0] ?? false) {
-                    $instance = new $indicatorClass(...$values, ...$params);
-                } else {
-                    $instance = new $indicatorClass($values, ...$params);
-                }
+                $instance = new $indicatorClass($values, ...$params);
 
                 $instance->setSymbolPrice($currentValue);
 

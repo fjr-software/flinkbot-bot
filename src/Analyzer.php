@@ -336,8 +336,8 @@ class Analyzer
                         );
 
                         if ($canCollateral) {
-                            $canPositionGain = $canPositionGain ? false : false;
-                            $canPrevent = $canPrevent ? false : false;
+                            $canPositionGain = false;
+                            $canPrevent = false;
 
                             if ($this->bot->enableDebug()) {
                                 $message = "Closing blocked by collateral position[{$position->side}] - ROI: {$position->pnl_roi_value} < {$requiredValueCollateral}";
@@ -653,10 +653,6 @@ class Analyzer
                                 if (!$partialOrderTakeRenewed
                                     && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'])
                                     && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['qty'])
-                                    /*&& (
-                                        $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] < $openOrder['stopPrice']
-                                        || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['take']['price'] > $openOrder['stopPrice']
-                                    )*/
                                 ) {
                                     if ($openOrdersPartialIds['take']) {
                                         foreach ($openOrdersPartialIds['take'] as $ids) {
@@ -704,10 +700,6 @@ class Analyzer
                                 if (!$partialOrderStopRenewed
                                     && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'])
                                     && !empty($pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['qty'])
-                                    /*&& (
-                                        $openOrder['positionSide'] === 'SHORT' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] < $openOrder['stopPrice']
-                                        || $openOrder['positionSide'] === 'LONG' && $pricesClosedPosition[$openOrder['positionSide']]['partial']['stop']['price'] > $openOrder['stopPrice']
-                                    )*/
                                 ) {
                                     if ($openOrdersPartialIds['stop']) {
                                         foreach ($openOrdersPartialIds['stop'] as $ids) {

@@ -28,6 +28,7 @@ class Bots extends Model
         'exchange',
         'api_key',
         'api_secret',
+        'request_timeout',
         'status',
         'state',
         'config',

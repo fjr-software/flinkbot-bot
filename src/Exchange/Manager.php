@@ -20,11 +20,15 @@ class Manager
      * Constructor
      *
      * @param ExchangeOptions $exchangeName
+     * @param string $publicKey
+     * @param string $privateKey
+     * @param int $timeout
      */
     public function __construct(
         private readonly ExchangeOptions $exchangeName,
         private readonly string $publicKey,
-        private readonly string $privateKey
+        private readonly string $privateKey,
+        private readonly int $timeout = 5
     ) {
         $this->init();
     }
@@ -91,7 +95,8 @@ class Manager
                     'order_count' => abs((int) $orderCount),
                     'order_last_time' => ApiRateLimit::raw('NOW()')
                 ]);
-            }
+            },
+            $this->timeout
         );
     }
 

@@ -49,8 +49,12 @@ class Bot
         }
 
         if (!$this->exchangeManager) {
-            $exchange = ExchangeOptions::from($exchange);
-            $this->exchangeManager = new Manager($exchange, $this->getApiKey(), $this->getApiSecret());
+            $this->exchangeManager = new Manager(
+                ExchangeOptions::from($exchange),
+                $this->getApiKey(),
+                $this->getApiSecret(),
+                $this->getRequestTimeout()
+            );
         }
     }
 
@@ -123,6 +127,16 @@ class Bot
     public function getApiSecret(): string
     {
         return $this->getData()->getApiSecret();
+    }
+
+    /**
+     * Get request timeout
+     *
+     * @return int
+     */
+    public function getRequestTimeout(): int
+    {
+        return (int) $this->getData()->request_timeout;
     }
 
     /**

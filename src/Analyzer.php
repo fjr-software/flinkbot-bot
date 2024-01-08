@@ -315,6 +315,7 @@ class Analyzer
                     && $position->pnl_roi_percent >= $configPosition['profit']
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
                 $canPositionLoss = $configPosition['loss'] > 0
+                    && $position->pnl_roi_value < 0
                     && abs((float) $position->pnl_roi_percent) >= $configPosition['loss']
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
                 $canPrevent = $configPosition['profit'] > 0

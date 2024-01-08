@@ -466,8 +466,8 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if (!$hasOrderLoss) {
-                            if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
+                        if (!$canPrevent && !$hasOrderLoss) {
+                            if ($configPosition['partialOrderProfit']['enabled']) {
                                 $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
 
                                 if ($this->bot->enableDebug()) {

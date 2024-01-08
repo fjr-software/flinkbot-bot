@@ -1032,7 +1032,13 @@ class Analyzer
                 $markPrice = (float) ($staticsTicker['lastPrice'] ?? 0);
 
                 $diffPrice = $this->bot->getExchange()->calculeProfit($markPrice, $this->bot->getConfig()->getIncrementTriggerPercentage());
-                $newPrice = (float) ($side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+
+                if ($stop) {
+                    $newPrice = (float) ($side === 'SHORT' ? $markPrice + $diffPrice : $markPrice - $diffPrice);
+                } else {
+                    $newPrice = (float) ($side === 'SHORT' ? $markPrice - $diffPrice : $markPrice + $diffPrice);
+                }
+
                 $price = $this->bot->getExchange()->formatDecimal($markPrice, $newPrice);
 
                 $this->closePosition($symbol, $side, $price, $stop, $qty);

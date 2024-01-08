@@ -424,7 +424,7 @@ class Analyzer
                                 $qtyPartial = round($qtyPartial, (int) $symbolExchange['quantityPrecision']);
                                 $qtyPartial = (float) ($qtyPartial < $position->symbol->min_quantity ? $position->symbol->min_quantity : $qtyPartial);
 
-                                $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, $incrementTriggerPercentage / 2);
+                                $diffPartialPrice = $this->bot->getExchange()->calculeProfit($markPrice, $this->bot->getConfig()->getIncrementTriggerPercentage());
                                 $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
                                 $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
 

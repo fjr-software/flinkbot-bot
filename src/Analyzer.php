@@ -247,16 +247,24 @@ class Analyzer
                 }
             }
 
-            $hasOrderLoss = false;
-            $hasOrderGain = false;
+            $hasOrders = [
+                'LONG' => [
+                    'gain' => false,
+                    'loss' => false
+                ],
+                'SHORT' => [
+                    'gain' => false,
+                    'loss' => false
+                ]
+            ];
 
             foreach ($openOrdersClosed as $openOrder) {
-                if ($openOrder['origType'] === 'STOP_MARKET') {
-                    $hasOrderLoss = true;
+                if ($openOrder['origType'] === 'TAKE_PROFIT_MARKET') {
+                    $hasOrders[$openOrder['positionSide']]['gain'] = true;
                 }
 
-                if ($openOrder['origType'] === 'TAKE_PROFIT_MARKET') {
-                    $hasOrderGain = true;
+                if ($openOrder['origType'] === 'STOP_MARKET') {
+                    $hasOrders[$openOrder['positionSide']]['loss'] = true;
                 }
             }
 
@@ -449,7 +457,7 @@ class Analyzer
                             ]
                         ];
 
-                        if (!$hasOrderGain) {
+                        if (!$hasOrders[$position->side]['gain']) {
                             if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']) {
                                 $this->closePosition($symbol, $position->side, $pricePartialCloseGain, false, $qtyPartial);
 
@@ -466,7 +474,7 @@ class Analyzer
                             $this->closePosition($symbol, $position->side, $priceCloseGain);
                         }
 
-                        if (!$canPrevent && !$hasOrderLoss) {
+                        if (!$canPrevent && !$hasOrders[$position->side]['loss']) {
                             if ($configPosition['partialOrderProfit']['enabled']) {
                                 $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
 
@@ -511,7 +519,7 @@ class Analyzer
             }
 
             if ($canGainLoss) {
-                if (($openOrder ?? false) && !$hasOrderLoss
+                if (($openOrder ?? false) && !$hasOrders[$openOrder['positionSide']]['loss']
                     && $this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())
                     && $openOrder['origType'] === 'TAKE_PROFIT_MARKET'
                     && $pricesClosedPosition[$openOrder['positionSide']]['gain']

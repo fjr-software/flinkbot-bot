@@ -326,6 +326,14 @@ class Analyzer
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
                 $canPositionTrade = $side === $position->side;
+                $canActivateTrigger = (
+                    $configPosition['valueActivateGainTrigger'] > 0
+                    && $position->pnl_roi_value >= $configPosition['valueActivateGainTrigger']
+                ) || (
+                    $position->pnl_roi_value < 0
+                    && $configPosition['valueActivateLossTrigger'] > 0
+                    && abs((float) $position->pnl_roi_value) >= $configPosition['valueActivateLossTrigger']
+                );
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
@@ -351,7 +359,7 @@ class Analyzer
                         }
                     }
 
-                    if ($canPrevent || ($canPositionGain || $canPositionLoss)) {
+                    if ($canPrevent || ($canPositionGain || $canPositionLoss || $canActivateTrigger)) {
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
                         $priceChangePercent = abs($this->bot->getExchange()->percentage((float) $staticsTicker['highPrice'], (float) $staticsTicker['lowPrice']));
                         $factorVolatility = floor(($priceChangePercent / ($configPosition['profit'] / $position->leverage)) / 2.5);

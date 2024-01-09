@@ -31,6 +31,7 @@ class Positions extends Model
         'size',
         'pnl_roi_percent',
         'pnl_roi_value',
+        'pnl_account_percent',
         'margin_account_percent',
         'margin_symbol_percent',
         'mark_price',

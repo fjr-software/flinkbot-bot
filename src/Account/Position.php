@@ -31,6 +31,7 @@ class Position
             $account = $this->bot->getExchange()->getAccountInformation();
             $positions = $this->bot->getExchange()->getPosition($symbolInfo->pair);
             $marginAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+            $pnlAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], (float) $account['totalUnrealizedProfit']);
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);
@@ -87,6 +88,7 @@ class Position
                             'size' => $size,
                             'roiPercent' => $roiPercent,
                             'unRealizedProfit' => (float) $position['unRealizedProfit'],
+                            'pnlAccountPercent' => $pnlAccountPercent,
                             'marginAccountPercent' => $marginAccountPercent,
                             'marginSymbolPercent' => $marginSymbolPercent,
                             'markPrice' => $markPrice,
@@ -159,6 +161,7 @@ class Position
                 'size' => $data['size'],
                 'pnl_roi_percent' => $data['roiPercent'],
                 'pnl_roi_value' => (float) $data['unRealizedProfit'],
+                'pnl_account_percent' => (float) $data['pnlAccountPercent'],
                 'margin_account_percent' => $data['marginAccountPercent'],
                 'margin_symbol_percent' => $data['marginSymbolPercent'],
                 'mark_price' => (float) $data['markPrice'],

@@ -30,8 +30,12 @@ class Position
         if ($symbolInfo = $this->getSymbol($symbol)) {
             $account = $this->bot->getExchange()->getAccountInformation();
             $positions = $this->bot->getExchange()->getPosition($symbolInfo->pair);
-            $marginAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
-            $pnlAccountPercent = 100 - $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
+
+            $marginAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
+            $marginAccountPercent = $marginAccountPercent ? (100 - $marginAccountPercent) : 0;
+
+            $pnlAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
+            $pnlAccountPercent = $pnlAccountPercent ? (100 - $pnlAccountPercent) : 0;
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);

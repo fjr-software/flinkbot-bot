@@ -320,20 +320,19 @@ class Analyzer
                     && $position->pnl_roi_value < 0
                     && abs((float) $position->pnl_roi_percent) >= $configPosition['loss']
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
+                $canActivateTrigger = ($configPosition['valueActivateGainTrigger'] > 0
+                        && $position->pnl_roi_value >= $configPosition['valueActivateGainTrigger']
+                    )
+                    || (
+                        $position->pnl_roi_value < 0 && $configPosition['valueActivateLossTrigger'] > 0
+                        && abs((float) $position->pnl_roi_value) >= $configPosition['valueActivateLossTrigger']
+                    );
                 $canPrevent = $configPosition['profit'] > 0
-                    && !$canPositionGain && !$canPositionLoss
+                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger
                     && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
                 $canPositionTrade = $side === $position->side;
-                $canActivateTrigger = (
-                    $configPosition['valueActivateGainTrigger'] > 0
-                    && $position->pnl_roi_value >= $configPosition['valueActivateGainTrigger']
-                ) || (
-                    $position->pnl_roi_value < 0
-                    && $configPosition['valueActivateLossTrigger'] > 0
-                    && abs((float) $position->pnl_roi_value) >= $configPosition['valueActivateLossTrigger']
-                );
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;

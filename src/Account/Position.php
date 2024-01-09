@@ -6,6 +6,7 @@ namespace FjrSoftware\Flinkbot\Bot\Account;
 
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
 use FjrSoftware\Flinkbot\Bot\Model\Symbols;
+use Illuminate\Database\Eloquent\Builder;
 
 class Position
 {
@@ -116,7 +117,12 @@ class Position
      */
     public function get(string $symbol): array
     {
-        $positions = Positions::where(['user_id' => $this->bot->getUserId()])->get();
+        $positions = Positions::where([
+            'user_id' => $this->bot->getUserId()
+        ])
+        ->whereHas('symbol', function (Builder $query) {
+            $query->where('bot_id', '=', $this->bot->getId());
+        })->get();
         $result = [];
 
         foreach ($positions as $position) {

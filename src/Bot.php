@@ -115,7 +115,10 @@ class Bot
      */
     private function getData(): array
     {
-        $bots = Bots::where(['user_id' => $this->customerId])->get();
+        $bots = Bots::where([
+            'user_id' => $this->customerId,
+            'status' => 'active',
+        ])->get();
         $symbols = [];
 
         foreach ($bots as $bot) {

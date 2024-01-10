@@ -63,7 +63,9 @@ class Manager
             'type' => 'proxy',
             'exchange' => strtolower($this->exchangeName->name),
             'status' => 'active'
-        ])->get();
+        ])
+        ->orderBy('updated_at', 'asc')
+        ->get();
 
         $rateLimitCurrent = null;
 

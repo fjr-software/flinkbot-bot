@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace FjrSoftware\Flinkbot\Bot\Account;
 
+use FjrSoftware\Flinkbot\Bot\Model\AccountValueCycle;
 use FjrSoftware\Flinkbot\Bot\Model\Positions;
 use FjrSoftware\Flinkbot\Bot\Model\Symbols;
 use Illuminate\Database\Eloquent\Builder;
 
 class Position
 {
+    /**
+     * @var array|null
+     */
+    private ?array $exchangeInfo = null;
+
     /**
      * Constructor
      *
@@ -37,6 +43,8 @@ class Position
 
             $pnlAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
             $pnlAccountPercent = $pnlAccountPercent ? (100 - $pnlAccountPercent) : 0;
+
+            $this->updateCycle((float) $account['totalWalletBalance'], 10);
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);
@@ -227,6 +235,69 @@ class Position
     }
 
     /**
+     * Update cycle
+     *
+     * @param float $currentValue
+     * @param float $targetPercentage
+     * @return void
+     */
+    private function updateCycle(float $currentValue, float $targetPercentage): void
+    {
+        $$targetPercentage /= 100;
+        $targetValue = $currentValue + ($currentValue * $targetPercentage);
+
+        if ($accountCycle = $this->getCurrentCycle()) {
+            if (!$accountCycle->done) {
+                $accountCycle->current_value = $currentValue;
+
+                if ($accountCycle->current_value >= $accountCycle->target_value) {
+                    $accountCycle->done = true;
+
+                    $symbols = Symbols::where([
+                        'bot_id' => $this->bot->getId(),
+                        'status' => 'active'
+                    ])->get();
+
+                    foreach ($symbols as $symbol) {
+                        if ($symbolExchange = $this->getSymbolExchange($symbol->pair)) {
+                            $baseQuantity = (float) $symbol->base_quantity;
+                            $baseQuantity = round($baseQuantity + ($baseQuantity * $targetPercentage), (int) $symbolExchange['quantityPrecision']);
+
+                            $symbol->base_quantity = $baseQuantity;
+                            $symbol->save();
+                        }
+                    }
+                }
+
+                $accountCycle->save();
+            }
+        } else {
+            AccountValueCycle::create([
+                'bot_id' => $this->bot->getId(),
+                'period' => date('Y-m-d H:00:00'),
+                'current_value' => $currentValue,
+                'target_value' => $targetValue,
+                'done' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Get current cycle
+     *
+     * @return mixed
+     */
+    public function getCurrentCycle(): mixed
+    {
+        $accountCycle = AccountValueCycle::where([
+            'bot_id' => $this->bot->getId(),
+            'period' => date('Y-m-d H:00:00')
+        ])->first();
+
+        return $accountCycle;
+    }
+
+    /**
      * Get symbol exchange
      *
      * @param string $symbol
@@ -234,8 +305,11 @@ class Position
      */
     private function getSymbolExchange(string $symbol): array
     {
-        $exchangeInfo = $this->bot->getExchange()->getExchangeInfo();
-        $symbolInfo = array_filter($exchangeInfo['symbols'], fn($info) => $info['symbol'] === $symbol);
+        if (!$this->exchangeInfo) {
+            $this->exchangeInfo = $this->bot->getExchange()->getExchangeInfo();
+        }
+
+        $symbolInfo = array_filter($this->exchangeInfo['symbols'], fn($info) => $info['symbol'] === $symbol);
 
         if ($symbolInfo) {
             return current($symbolInfo);

@@ -26,6 +26,11 @@ class Bot
     private bool $isRunning = false;
 
     /**
+     * @var string
+     */
+    private string $host = '127.0.0.1';
+
+    /**
      * Constructor
      *
      * @param int $customerId
@@ -91,6 +96,27 @@ class Bot
     public function closeAll(bool $force = false): void
     {
         $this->processor->closeAllProcess($force);
+    }
+
+    /**
+     * Set host
+     *
+     * @param string $host
+     * @return void
+     */
+    public function setHost(string $host): void
+    {
+        $this->host = $host;
+    }
+
+    /**
+     * Get host
+     *
+     * @return string
+     */
+    public function getHost(): string
+    {
+        return $this->host;
     }
 
     /**

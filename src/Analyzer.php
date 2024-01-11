@@ -89,11 +89,13 @@ class Analyzer
      * Constructor
      *
      * @param int $botId
+     * @param string $host
      */
     public function __construct(
-        private readonly int $botId
+        private readonly int $botId,
+        private readonly string $host
     ) {
-        $this->bot = new Bot($this->botId);
+        $this->bot = new Bot($this->botId, $this->host);
         $this->position = new Position($this->bot);
         $this->log = new Log($botId);
         $this->loop = Loop::get();

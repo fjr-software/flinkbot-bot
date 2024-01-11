@@ -27,9 +27,11 @@ class Bot
      * Constructor
      *
      * @param int $botId
+     * @param string $host
      */
     public function __construct(
-        private readonly int $botId
+        private readonly int $botId,
+        private readonly string $host
     ) {
         $this->collection = Bots::where(['id' => $this->botId])->get();
         $this->init();
@@ -53,7 +55,8 @@ class Bot
                 ExchangeOptions::from($exchange),
                 $this->getApiKey(),
                 $this->getApiSecret(),
-                $this->getRequestTimeout()
+                $this->getRequestTimeout(),
+                $this->host
             );
         }
     }

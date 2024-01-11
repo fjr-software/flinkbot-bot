@@ -13,12 +13,14 @@ class Operation
      *
      * @param int $botId
      * @param string $symbol
+     * @param string $host
      */
     public function __construct(
         private readonly int $botId,
-        private readonly string $symbol
+        private readonly string $symbol,
+        private readonly string $host
     ) {
-        $this->analyzer = new Analyzer($this->botId);
+        $this->analyzer = new Analyzer($this->botId, $this->host);
     }
 
     /**

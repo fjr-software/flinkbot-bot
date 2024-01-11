@@ -23,12 +23,14 @@ class Manager
      * @param string $publicKey
      * @param string $privateKey
      * @param int $timeout
+     * @param string $host
      */
     public function __construct(
         private readonly ExchangeOptions $exchangeName,
         private readonly string $publicKey,
         private readonly string $privateKey,
-        private readonly int $timeout = 5
+        private readonly int $timeout = 5,
+        private readonly string $host
     ) {
         $this->init();
     }
@@ -56,7 +58,7 @@ class Manager
             'type' => 'hosting',
             'exchange' => strtolower($this->exchangeName->name),
             'status' => 'active',
-            'ip' => $this->getIp()
+            'ip' => $this->host
         ])->first();
 
         $rateLimitList = ApiRateLimit::where([

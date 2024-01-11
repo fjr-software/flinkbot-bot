@@ -166,11 +166,11 @@ class Position
 
         $extra = [];
 
-        if ($position && $position?->status === 'close' && $data['status'] === 'open') {
+        if ($position && $position?->status === 'closed' && $data['status'] === 'open') {
             $extras['open_at'] = date('Y-m-d H:i:s');
         }
 
-        if ($position && $position?->status === 'open' && $data['status'] === 'close') {
+        if ($position && $position?->status === 'open' && $data['status'] === 'closed') {
             $extra['close_at'] = date('Y-m-d H:i:s');
         }
 

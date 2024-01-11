@@ -64,7 +64,7 @@ class Manager
             'exchange' => strtolower($this->exchangeName->name),
             'status' => 'active'
         ])
-        ->orderBy('updated_at', 'asc')
+        ->orderBy('priority', 'asc')
         ->get();
 
         $rateLimitCurrent = null;

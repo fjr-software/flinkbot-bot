@@ -24,6 +24,7 @@ class ApiRateLimit extends Model
         'ip',
         'country',
         'exchange',
+        'priority',
         'request_count',
         'request_last_time',
         'request_rate_limit',

@@ -352,7 +352,7 @@ class Analyzer
                 }
 
                 $canPrevent = $configPosition['profit'] > 0
-                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime && !$canTradeCurrentCycle;
+                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime && !$canTradeCurrentCycle
                     && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];

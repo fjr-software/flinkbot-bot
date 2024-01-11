@@ -335,8 +335,14 @@ class Analyzer
                         && $position->pnl_roi_value > 0;
                 }
 
+                $canMaximumTime = false;
+
+                if ($position->status === 'open' && ($openAt = (string) $position?->open_at)) {
+                    $canMaximumTime = $this->bot->getExchange()->timePosition($openAt) >= $configPosition['maximumTime'];
+                }
+
                 $canPrevent = $configPosition['profit'] > 0
-                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger
+                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime
                     && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
@@ -345,7 +351,7 @@ class Analyzer
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
 
-                    if ($checkCollateralForProfitClosure && ($canPositionGain || $canActivateTrigger || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
+                    if ($checkCollateralForProfitClosure && ($canPositionGain || $canActivateTrigger || $canMaximumTime || $canPrevent) && $collateralPosition = $collateral[$position->side]) {
                         $requiredValueCollateral = abs((float) ($collateralPosition->pnl_roi_value) * $collateralCheckDisableThreshold);
                         $canCollateral = ($collateralPosition->pnl_roi_percent <= ($configPosition['profit'] * -1)
                             && $position->pnl_roi_value < $requiredValueCollateral
@@ -366,7 +372,15 @@ class Analyzer
                         }
                     }
 
-                    if ($canPrevent || ($canPositionGain || $canPositionLoss || $canActivateTrigger)) {
+                    $canAnalyzer = [
+                        $canPrevent,
+                        $canPositionGain,
+                        $canPositionLoss,
+                        $canActivateTrigger,
+                        $canMaximumTime,
+                    ];
+
+                    if (in_array(true, $canAnalyzer, true)) {
                         $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);
                         $priceChangePercent = abs($this->bot->getExchange()->percentage((float) $staticsTicker['highPrice'], (float) $staticsTicker['lowPrice']));
                         $factorVolatility = floor(($priceChangePercent / ($configPosition['profit'] / $position->leverage)) / 2.5);
@@ -442,6 +456,10 @@ class Analyzer
                             $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);
                             $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                             $typeClosed = 'prevent';
+                        }
+
+                        if ($canMaximumTime) {
+                            $typeClosed = 'maximumTime';
                         }
 
                         if (!$canPrevent && $configPosition['partialOrderProfit']['enabled']

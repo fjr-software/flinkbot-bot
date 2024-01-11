@@ -307,6 +307,12 @@ class Analyzer
                 'SHORT' => 0
             ];
 
+            $canTradeCurrentCycle = true;
+
+            if ($currentCycle = $this->position->getCurrentCycle()) {
+                $canTradeCurrentCycle = !$currentCycle->done;
+            }
+
             foreach ($positions as $position) {
                 $marginAccountPercent = $position->margin_account_percent;
                 $marginSymbolQty[$position->side] = $position->size;
@@ -346,7 +352,7 @@ class Analyzer
                 }
 
                 $canPrevent = $configPosition['profit'] > 0
-                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime
+                    && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime && !$canTradeCurrentCycle;
                     && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
@@ -382,6 +388,7 @@ class Analyzer
                         $canPositionLoss,
                         $canActivateTrigger,
                         $canMaximumTime,
+                        $canTradeCurrentCycle,
                     ];
 
                     if (in_array(true, $canAnalyzer, true)) {

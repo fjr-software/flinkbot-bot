@@ -167,19 +167,23 @@ class Position
         $extra = [];
 
         if ($position && $position?->status === 'closed' && $data['status'] === 'open') {
-            $extras['open_at'] = date('Y-m-d H:i:s');
+            $extra['open_at'] = date('Y-m-d H:i:s');
+            $extra['close_at'] = null;
         }
 
         if ($position && $position?->status === 'open' && $data['status'] === 'closed') {
+            $extra['open_at'] = null;
             $extra['close_at'] = date('Y-m-d H:i:s');
         }
 
         if (!$position) {
-            $extras['open_at'] = date('Y-m-d H:i:s');
+            $extra['open_at'] = date('Y-m-d H:i:s');
+            $extra['close_at'] = null;
         }
 
         if ($position && !$position?->open_at && $position?->status === 'open' && $data['status'] === 'open') {
-            $extras['open_at'] = date('Y-m-d H:i:s');
+            $extra['open_at'] = date('Y-m-d H:i:s');
+            $extra['close_at'] = null;
         }
 
         Positions::updateOrCreate(

@@ -307,10 +307,10 @@ class Analyzer
                 'SHORT' => 0
             ];
 
-            $canTradeCurrentCycle = true;
+            $canTradeCurrentCycle = false;
 
             if ($currentCycle = $this->position->getCurrentCycle()) {
-                $canTradeCurrentCycle = !$currentCycle->done;
+                $canTradeCurrentCycle = $currentCycle->done;
             }
 
             foreach ($positions as $position) {

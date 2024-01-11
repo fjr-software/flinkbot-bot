@@ -172,7 +172,6 @@ class Position
         }
 
         if ($position && $position?->status === 'open' && $data['status'] === 'closed') {
-            $extra['open_at'] = null;
             $extra['close_at'] = date('Y-m-d H:i:s');
         }
 

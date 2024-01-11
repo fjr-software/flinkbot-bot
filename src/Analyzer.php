@@ -339,7 +339,7 @@ class Analyzer
 
                 $canMaximumTime = false;
 
-                if ($position->status === 'open' && ($openAt = (string) $position?->open_at)) {
+                if ($position->status === 'open' && $configPosition['maximumTime'] > 0 && ($openAt = (string) $position?->open_at)) {
                     $canMaximumTime = $this->bot->getExchange()->timePosition($openAt) >= $configPosition['maximumTime'];
                 }
 

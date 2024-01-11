@@ -158,6 +158,26 @@ class Position
      */
     private function updateOrCreate(array $data): void
     {
+        $position = Positions::where([
+            'user_id' => $this->bot->getUserId(),
+            'symbol_id' => $data['symbolId'],
+            'side' => $data['side']
+        ])->get();
+
+        $extra = [];
+
+        if ($position && $position->status === 'close' && $data['status'] === 'open') {
+            $extras['open_at'] = date('Y-m-d H:i:s');
+        }
+
+        if ($position && $position->status === 'open' && $data['status'] === 'close') {
+            $extra['close_at'] = date('Y-m-d H:i:s');
+        }
+
+        if (!$position) {
+            $extras['open_at'] = date('Y-m-d H:i:s');
+        }
+
         Positions::updateOrCreate(
             [
                 'user_id' => $this->bot->getUserId(),
@@ -178,7 +198,7 @@ class Position
                 'liquid_price' => (float) $data['liquidationPrice'],
                 'margin_type' => $data['type'],
                 'status' => $data['status'],
-            ]
+            ]+$extra
         );
     }
 

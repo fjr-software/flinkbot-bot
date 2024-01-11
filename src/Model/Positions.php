@@ -38,6 +38,8 @@ class Positions extends Model
         'liquid_price',
         'margin_type',
         'status',
+        'open_at',
+        'close_at'
     ];
 
     /**

@@ -422,12 +422,20 @@ class BotConfig
         foreach ($this->indicator['indicators'] as $indicator => $config) {
             $indicatorClass = self::ALLOWED_INDICATORS[$indicator];
 
-            foreach ($config as $params) {
-                $instance = new $indicatorClass($values, ...$params);
+            if (!$config) {
+                $instance = new $indicatorClass($values);
 
                 $instance->setSymbolPrice($currentValue);
 
                 $result[$indicator][] = $instance;
+            } else {
+                foreach ($config as $params) {
+                    $instance = new $indicatorClass($values, ...$params);
+
+                    $instance->setSymbolPrice($currentValue);
+
+                    $result[$indicator][] = $instance;
+                }
             }
         }
 

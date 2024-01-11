@@ -178,6 +178,10 @@ class Position
             $extras['open_at'] = date('Y-m-d H:i:s');
         }
 
+        if ($position && !$position?->open_at && $position?->status === 'open' && $data['status'] === 'open') {
+            $extras['open_at'] = date('Y-m-d H:i:s');
+        }
+
         Positions::updateOrCreate(
             [
                 'user_id' => $this->bot->getUserId(),

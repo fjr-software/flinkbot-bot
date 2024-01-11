@@ -243,7 +243,7 @@ class Position
      */
     private function updateCycle(float $currentValue, float $targetPercentage): void
     {
-        $$targetPercentage /= 100;
+        $targetPercentage /= 100;
         $targetValue = $currentValue + ($currentValue * $targetPercentage);
 
         if ($accountCycle = $this->getCurrentCycle()) {

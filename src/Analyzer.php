@@ -340,7 +340,9 @@ class Analyzer
                 $canMaximumTime = false;
 
                 if ($position->status === 'open' && $configPosition['maximumTime'] > 0 && ($openAt = (string) $position?->open_at)) {
-                    $canMaximumTime = $this->bot->getExchange()->timePosition($openAt) >= $configPosition['maximumTime'];
+                    $canMaximumTime = $position->pnl_roi_value < 0
+                        && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss']
+                        && $this->bot->getExchange()->timePosition($openAt) >= $configPosition['maximumTime'];
                 }
 
                 $canPrevent = $configPosition['profit'] > 0

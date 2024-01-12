@@ -432,12 +432,12 @@ class Analyzer
                         $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                         $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
                         $canTakeIndicator = $priceTakeIndicator && (
-                            $position->side === 'LONG' && $markPrice > $priceTakeIndicator
-                            || $position->side === 'SHORT' && $markPrice < $priceTakeIndicator
+                            $position->side === 'LONG' && $markPrice < $priceTakeIndicator
+                            || $position->side === 'SHORT' && $markPrice > $priceTakeIndicator
                         );
                         $canStopIndicator = $priceStopIndicator && (
-                            $position->side === 'LONG' && $markPrice < $priceStopIndicator
-                            || $position->side === 'SHORT' && $markPrice > $priceStopIndicator
+                            $position->side === 'LONG' && $markPrice > $priceStopIndicator
+                            || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
                         );
                         $canGainLoss = true;
                         $qtyPartial = null;

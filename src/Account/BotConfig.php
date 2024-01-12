@@ -10,6 +10,7 @@ use FjrSoftware\Flinkbot\Indicator\MovingAverageEMA;
 use FjrSoftware\Flinkbot\Indicator\MovingAverageSMA;
 use FjrSoftware\Flinkbot\Indicator\StochasticRSI;
 use FjrSoftware\Flinkbot\Indicator\IndicatorInterface;
+use FjrSoftware\Flinkbot\Indicator\SupportResistance;
 
 class BotConfig
 {
@@ -18,6 +19,7 @@ class BotConfig
         'MovingAverageSMA' => MovingAverageSMA::class,
         'StochasticRSI' => StochasticRSI::class,
         'Aroon' => Aroon::class,
+        'SupportResistance' => SupportResistance::class,
     ];
 
     /**

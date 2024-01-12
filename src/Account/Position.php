@@ -44,7 +44,7 @@ class Position
             $pnlAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
             $pnlAccountPercent = $pnlAccountPercent ? (100 - $pnlAccountPercent) : 0;
 
-            $this->updateCycle((float) $account['totalMarginBalance'], 10);
+            $this->updateCycle((float) $account['totalMarginBalance'], (float) $account['totalWalletBalance'], 10);
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);
@@ -238,13 +238,14 @@ class Position
      * Update cycle
      *
      * @param float $currentValue
+     * @param float $walletValue
      * @param float $targetPercentage
      * @return void
      */
-    private function updateCycle(float $currentValue, float $targetPercentage): void
+    private function updateCycle(float $currentValue, float $walletValue, float $targetPercentage): void
     {
         $targetPercentage /= 100;
-        $targetValue = $currentValue + ($currentValue * $targetPercentage);
+        $targetValue = $walletValue + ($walletValue * $targetPercentage);
 
         if ($accountCycle = $this->getCurrentCycle()) {
             if (!$accountCycle->done) {

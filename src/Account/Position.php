@@ -44,7 +44,7 @@ class Position
             $pnlAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
             $pnlAccountPercent = $pnlAccountPercent ? (100 - $pnlAccountPercent) : 0;
 
-            $this->updateCycle((float) $account['totalWalletBalance'], 10);
+            $this->updateCycle((float) $account['totalMarginBalance'], 10);
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);

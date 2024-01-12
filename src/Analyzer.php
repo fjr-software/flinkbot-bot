@@ -310,7 +310,7 @@ class Analyzer
             $canTradeCurrentCycle = false;
 
             if ($currentCycle = $this->position->getCurrentCycle()) {
-                $canTradeCurrentCycle = $currentCycle->done;
+                $canTradeCurrentCycle = (bool) $currentCycle->done;
                 $side = $canTradeCurrentCycle ? '' : $side;
             }
 

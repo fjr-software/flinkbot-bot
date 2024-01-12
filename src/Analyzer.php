@@ -311,6 +311,7 @@ class Analyzer
 
             if ($currentCycle = $this->position->getCurrentCycle()) {
                 $canTradeCurrentCycle = $currentCycle->done;
+                $side = $canTradeCurrentCycle ? '' : $side;
             }
 
             foreach ($positions as $position) {

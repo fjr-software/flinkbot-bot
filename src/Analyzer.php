@@ -322,6 +322,7 @@ class Analyzer
                     'limit' => $position->symbol->max_margin
                 ];
 
+                $canPositionTrade = $side === $position->side;
                 $canPositionGain = $configPosition['profit'] > 0
                     && $position->pnl_roi_percent >= $configPosition['profit']
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
@@ -348,6 +349,7 @@ class Analyzer
 
                 if ($position->status === 'open' && $configPosition['maximumTime'] > 0 && ($openAt = (string) $position?->open_at)) {
                     $canMaximumTime = $position->pnl_roi_value < 0
+                        && !$canPositionTrade
                         && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss']
                         && $this->bot->getExchange()->timePosition($openAt) >= $configPosition['maximumTime'];
                 }
@@ -357,7 +359,6 @@ class Analyzer
                     && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
-                $canPositionTrade = $side === $position->side;
 
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;

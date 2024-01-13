@@ -527,20 +527,24 @@ class Analyzer
                         }
 
                         if (!$hasOrders[$position->side]['loss']) {
-                            if (!$canPrevent && $configPosition['partialOrderProfit']['enabled'] && isset($pricePartialCloseStopGain)) {
-                                $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
+                            if ($position->side === 'LONG' && $priceCloseStopGain > $entryPrice
+                                || $position->side === 'SHORT' && $priceCloseStopGain < $entryPrice
+                            ) {
+                                if (!$canPrevent && $configPosition['partialOrderProfit']['enabled'] && isset($pricePartialCloseStopGain)) {
+                                    $this->closePosition($symbol, $position->side, $pricePartialCloseStopGain, true, $qtyPartial);
 
-                                if ($this->bot->enableDebug()) {
-                                    $percent = (float) $position->pnl_roi_percent;
-                                    $message = "Partial-stop {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
+                                    if ($this->bot->enableDebug()) {
+                                        $percent = (float) $position->pnl_roi_percent;
+                                        $message = "Partial-stop {$percPartial}% order created[{$typeClosed}] - ROI: {$percent}%";
 
-                                    $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+                                        $this->log->register(LogLevel::LEVEL_DEBUG, $message);
 
-                                    echo "{$message}\n";
+                                        echo "{$message}\n";
+                                    }
                                 }
-                            }
 
-                            $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                                $this->closePosition($symbol, $position->side, $priceCloseStopGain, true);
+                            }
                         }
 
                         if ($this->bot->enableDebug()) {

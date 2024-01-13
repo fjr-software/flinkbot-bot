@@ -584,8 +584,12 @@ class BotConfig
             return (float) $value;
         }
 
-        if (preg_match('/@INDICATOR\_(?<name>[a-z]+)\_(?<key>[0-9]+)/i', $value, $match)) {
-            return $indicators[$match['key']]->getValue();
+        if (preg_match('/@INDICATOR\_(?<indicator>[a-z]+)\_(?<ord>[0-9\.]+)\_(?<value>[0-9\.]+)/i', $value, $match)) {
+            if (isset($indicators[$match['indicator']], $val[$match['ord']])) {
+                if (isset($indicators[$match['ord']]->getValue()[$match['value']])) {
+                    return $indicators[$match['ord']]->getValue()[$match['value']];
+                }
+            }
         }
 
         return $value;

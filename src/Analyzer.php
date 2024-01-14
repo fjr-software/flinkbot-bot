@@ -197,12 +197,12 @@ class Analyzer
                 if (in_array($prioritySideIndicator, ['LONG', 'SHORT'])) {
                     $side = $prioritySideIndicator;
                 } else {
-                    if ($indicators['long'][$this->bot->getConfig()->getPrioritySideIndicator()] ?? false) {
-                        $side = 'LONG';
-                    }
-
                     if ($indicators['short'][$this->bot->getConfig()->getPrioritySideIndicator()] ?? false) {
                         $side = 'SHORT';
+                    }
+
+                    if ($indicators['long'][$this->bot->getConfig()->getPrioritySideIndicator()] ?? false) {
+                        $side = 'LONG';
                     }
                 }
             }

@@ -173,8 +173,8 @@ class Analyzer
                         }
                     }
 
-                    $sideInd = $indicators['long'][$ind] ? 'LONG' : '';
-                    $sideInd = $indicators['short'][$ind] ? 'SHORT' : $sideInd;
+                    $sideInd = ($indicators['long'][$ind] ?? false) ? 'LONG' : '';
+                    $sideInd = ($indicators['short'][$ind] ?? false) ? 'SHORT' : $sideInd;
                     $debugValues[] = $ind . ':'. $sideInd;
 
                     foreach ($val as $indTmp) {

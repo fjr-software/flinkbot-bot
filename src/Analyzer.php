@@ -309,9 +309,11 @@ class Analyzer
 
             $canTradeCurrentCycle = false;
 
-            if ($configPosition['triggerTradeCurrentCycle']['enabled'] ?? false && ($currentCycle = $this->position->getCurrentCycle())) {
-                $canTradeCurrentCycle = (bool) $currentCycle->done;
-                $side = $canTradeCurrentCycle ? '' : $side;
+            if ($configPosition['triggerTradeCurrentCycle']['enabled'] ?? false) {
+                if ($currentCycle = $this->position->getCurrentCycle()) {
+                    $canTradeCurrentCycle = (bool) $currentCycle->done;
+                    $side = $canTradeCurrentCycle ? '' : $side;
+                }
             }
 
             foreach ($positions as $position) {

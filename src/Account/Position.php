@@ -37,6 +37,7 @@ class Position
         if ($symbolInfo = $this->getSymbol($symbol)) {
             $account = $this->bot->getExchange()->getAccountInformation();
             $positions = $this->bot->getExchange()->getPosition($symbolInfo->pair);
+            $configPosition = $this->bot->getConfig()->getPosition();
 
             $marginAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalMarginBalance'], (float) $account['totalMaintMargin']);
             $marginAccountPercent = $marginAccountPercent ? (100 - $marginAccountPercent) : 0;
@@ -44,7 +45,10 @@ class Position
             $pnlAccountPercent = $this->bot->getExchange()->percentage((float) $account['totalWalletBalance'], round((float) $account['totalUnrealizedProfit'], 2));
             $pnlAccountPercent = $pnlAccountPercent ? (100 - $pnlAccountPercent) : 0;
 
-            $this->updateCycle((float) $account['totalMarginBalance'], (float) $account['totalWalletBalance'], 10);
+            if ($configPosition['triggerTradeCurrentCycle']['enabled'] ?? false) {
+                $targetPercentage = (float) ($configPosition['triggerTradeCurrentCycle']['percentage'] ?? 0);
+                $this->updateCycle((float) $account['totalMarginBalance'], (float) $account['totalWalletBalance'], $targetPercentage);
+            }
 
             foreach ($positions as $position) {
                 $size = abs((float) $position['positionAmt']);

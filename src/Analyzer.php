@@ -238,6 +238,8 @@ class Analyzer
             ];
             $positions = $this->position->get($symbol);
             $configPosition = $this->bot->getConfig()->getPosition();
+            $percentageFrom = (float) ($configPosition['triggerPreventOnGain']['percentage_from'] ?? 0 / 100);
+            $percentageTo = (float) ($configPosition['triggerPreventOnGain']['percentage_to'] ?? 0 / 100);
             $checkCollateralForProfitClosure = (bool) ($this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false);
             $collateralCheckDisableThreshold = (float) ($this->bot->getConfig()->getPosition()['collateralCheckDisableThreshold'] ?? 0);
             $collateralCheckDisableThreshold /= 100;
@@ -358,8 +360,9 @@ class Analyzer
 
                 $canPrevent = $configPosition['profit'] > 0
                     && !$canPositionGain && !$canPositionLoss && !$canActivateTrigger && !$canMaximumTime && !$canTradeCurrentCycle
-                    && $position->pnl_roi_percent >= ($configPosition['profit'] * 0.1)
-                    && $position->pnl_roi_percent <= ($configPosition['profit'] * 0.7)
+                    && $configPosition['triggerPreventOnGain']['enabled']
+                    && $position->pnl_roi_percent >= ($configPosition['profit'] * $percentageFrom)
+                    && $position->pnl_roi_percent <= ($configPosition['profit'] * $percentageTo)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
 
                 if ($position->status === 'open') {

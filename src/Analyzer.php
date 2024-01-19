@@ -238,8 +238,8 @@ class Analyzer
             ];
             $positions = $this->position->get($symbol);
             $configPosition = $this->bot->getConfig()->getPosition();
-            $percentageFrom = (float) ($configPosition['triggerPreventOnGain']['percentage_from'] ?? 0 / 100);
-            $percentageTo = (float) ($configPosition['triggerPreventOnGain']['percentage_to'] ?? 0 / 100);
+            $percentageFrom = (float) ($configPosition['triggerPreventOnGain']['percentage_from'] ?? 0) / 100;
+            $percentageTo = (float) ($configPosition['triggerPreventOnGain']['percentage_to'] ?? 0) / 100;
             $checkCollateralForProfitClosure = (bool) ($this->bot->getConfig()->getPosition()['checkCollateralForProfitClosure'] ?? false);
             $collateralCheckDisableThreshold = (float) ($this->bot->getConfig()->getPosition()['collateralCheckDisableThreshold'] ?? 0);
             $collateralCheckDisableThreshold /= 100;

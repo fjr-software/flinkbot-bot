@@ -365,6 +365,22 @@ class Analyzer
                     && $position->pnl_roi_percent <= ($configPosition['profit'] * $percentageTo)
                     && $position->pnl_roi_value >= $configPosition['minimumGain'];
 
+                if ($position->status === 'closed' && $position->side === $side) {
+                    $lastClosed = (int) strtotime((string) $position['close_at']);
+
+                    if ($lastClosed && !$this->isTimeBoxOrder($lastClosed)) {
+                        $side = '';
+
+                        if ($this->bot->enableDebug()) {
+                            $message = "Recently closed {$position->side} position";
+
+                            $this->log->register(LogLevel::LEVEL_DEBUG, $message);
+
+                            echo "{$message}\n";
+                        }
+                    }
+                }
+
                 if ($position->status === 'open') {
                     $hasPosition[$position->side] = true;
 

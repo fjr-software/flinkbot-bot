@@ -282,6 +282,7 @@ class Position
                 'period' => date('Y-m-d H:00:00'),
                 'current_value' => $currentValue,
                 'target_value' => $targetValue,
+                'account_balance' => $walletValue,
                 'done' => false,
             ]);
         }

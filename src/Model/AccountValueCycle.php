@@ -25,6 +25,7 @@ class AccountValueCycle extends Model
         'period',
         'current_value',
         'target_value',
+        'account_balance',
         'done',
     ];
 }

@@ -335,12 +335,17 @@ class Analyzer
                     && abs((float) $position->pnl_roi_percent) >= $configPosition['loss']
                     && abs((float) $position->pnl_roi_value) >= $configPosition['minimumLoss'];
 
-                $canActivateTrigger = ($configPosition['valueActivateGainTrigger'] > 0
-                        && $position->pnl_roi_value >= $configPosition['valueActivateGainTrigger']
-                    )
-                    || (
-                        $position->pnl_roi_value < 0 && $configPosition['valueActivateLossTrigger'] > 0
-                        && abs((float) $position->pnl_roi_value) >= $configPosition['valueActivateLossTrigger']
+                $canActivateTrigger = $configPosition['triggerActivateOnValues']['enabled']
+                    && (
+                        ($configPosition['triggerActivateOnValues']['valueGain'] > 0
+                            && $position->pnl_roi_percent >= $configPosition['triggerActivateOnValues']['minPercentageGain']
+                            && $position->pnl_roi_value >= $configPosition['triggerActivateOnValues']['valueGain']
+                        )
+                        || (
+                            $position->pnl_roi_value < 0 && $configPosition['triggerActivateOnValues']['valueLoss'] > 0
+                            && abs((float) $position->pnl_roi_percent) >= $configPosition['triggerActivateOnValues']['minPercentageLoss']
+                            && abs((float) $position->pnl_roi_value) >= $configPosition['triggerActivateOnValues']['valueLoss']
+                        )
                     );
 
                 if (!$canActivateTrigger) {

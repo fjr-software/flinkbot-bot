@@ -1042,7 +1042,7 @@ class Analyzer
             $interval = str_replace(
                 ['m', 'h', 'd'],
                 [' minute', ' hour', ' day'],
-                $this->bot->getConfig()->getInterval()
+                $this->bot->getConfig()->getFilledInterval()
             );
 
             $orders = Orders::where([

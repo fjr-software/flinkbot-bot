@@ -45,6 +45,11 @@ class BotConfig
     private string $interval = '15m';
 
     /**
+     * @var string
+     */
+    private string $filledInterval = '15m';
+
+    /**
      * @var int
      */
     private int $orderCommonTimeout = 60;
@@ -190,6 +195,29 @@ class BotConfig
     public function getInterval(): string
     {
         return $this->interval;
+    }
+
+    /**
+     * Set filled interval
+     *
+     * @param string $filledInterval
+     * @return BotConfig
+     */
+    public function setFilledInterval(string $filledInterval): BotConfig
+    {
+        $this->filledInterval = $filledInterval;
+
+        return $this;
+    }
+
+    /**
+     * Get filled interval
+     *
+     * @return string
+     */
+    public function getFilledInterval(): string
+    {
+        return $this->filledInterval;
     }
 
     /**
@@ -611,6 +639,7 @@ class BotConfig
             $this->setOperationSide($config['operationSide'] ?? 'both');
             $this->setPrioritySideIndicator($config['prioritySideIndicator'] ?? 'short');
             $this->setInterval($config['interval'] ?? '15m');
+            $this->setFilledInterval($config['filledInterval'] ?? '15m');
             $this->setOrderCommonTimeout($config['orderCommonTimeout'] ?? 60);
             $this->setOrderTriggerTimeout($config['orderTriggerTimeout'] ?? 60);
             $this->setOrderLongTriggerTimeout($config['orderLongTriggerTimeout'] ?? 3600);

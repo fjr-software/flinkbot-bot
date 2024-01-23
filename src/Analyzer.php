@@ -465,7 +465,7 @@ class Analyzer
                             $position->side === 'LONG' && $markPrice > $priceStopIndicator
                             || $position->side === 'SHORT' && $markPrice < $priceStopIndicator
                         );
-                        $canGainLoss = true;
+
                         $qtyPartial = null;
 
                         if ($canTakeIndicator && (
@@ -486,9 +486,12 @@ class Analyzer
                         }
 
                         if ($canPrevent) {
-                            $canGainLoss = $configPosition['triggerActivateOnValues']['minPercentageGain'] > 0
-                                ? $position->pnl_roi_percent >= $configPosition['triggerActivateOnValues']['minPercentageGain']
-                                : $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
+                            if (!$canGainLoss) {
+                                $canGainLoss = $configPosition['triggerActivateOnValues']['minPercentageGain'] > 0
+                                    ? $position->pnl_roi_percent >= $configPosition['triggerActivateOnValues']['minPercentageGain']
+                                    : $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
+                            }
+
                             $diffPrice = $this->bot->getExchange()->calculeProfit(
                                 $entryPrice,
                                 (float) ($configPosition['profit'] / $position->leverage) + $incrementTriggerPercentage
@@ -497,6 +500,8 @@ class Analyzer
                             $priceCloseGain = (float) ($position->side === 'SHORT' ? $avgEntryMarkGain - $diffPrice : $avgEntryMarkGain + $diffPrice);
                             $priceCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseGain);
                             $typeClosed = 'prevent';
+                        } else {
+                            $canGainLoss = true;
                         }
 
                         if ($canMaximumTime) {

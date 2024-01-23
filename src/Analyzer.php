@@ -486,7 +486,9 @@ class Analyzer
                         }
 
                         if ($canPrevent) {
-                            $canGainLoss = $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
+                            $canGainLoss = $configPosition['triggerActivateOnValues']['minPercentageGain'] > 0
+                                ? $position->pnl_roi_percent >= $configPosition['triggerActivateOnValues']['minPercentageGain']
+                                : $position->pnl_roi_percent >= ($configPosition['profit'] / 2);
                             $diffPrice = $this->bot->getExchange()->calculeProfit(
                                 $entryPrice,
                                 (float) ($configPosition['profit'] / $position->leverage) + $incrementTriggerPercentage

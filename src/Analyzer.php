@@ -704,10 +704,6 @@ class Analyzer
                 }
 
                 foreach ($openOrdersClosed as $openOrder) {
-                    if ($canPrevent && $openOrder['origType'] === 'STOP_MARKET') {
-                        continue;
-                    }
-
                     if ($this->bot->getExchange()->isTimeBoxOrder($openOrder['time'], $this->bot->getConfig()->getOrderTriggerTimeout())) {
                         if (
                             $openOrder['origType'] === 'TAKE_PROFIT_MARKET'

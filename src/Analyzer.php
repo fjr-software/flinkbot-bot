@@ -1091,11 +1091,13 @@ class Analyzer
                 'pair' => $symbol
             ])->first();
 
-            $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop, $qty);
-            $order['userId'] = $this->bot->getUserId();
-            $order['symbolId'] = $symbolConfig->id;
+            if ((bool) ($symbolConfig->can_close ?? false)) {
+                $order = $this->bot->getExchange()->closePosition($symbol, $side, $price, $stop, $qty);
+                $order['userId'] = $this->bot->getUserId();
+                $order['symbolId'] = $symbolConfig->id;
 
-            $this->updateOrCreateOrder($order);
+                $this->updateOrCreateOrder($order);
+            }
         } catch (UnexpectedValueException $e) {
             if (str_contains($e->getMessage(), 'Order would immediately trigger')) {
                 $staticsTicker = $this->bot->getExchange()->getStaticsTicker($symbol);

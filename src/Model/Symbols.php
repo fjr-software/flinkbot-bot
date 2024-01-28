@@ -30,6 +30,7 @@ class Symbols extends Model
         'status',
         'base_quantity',
         'min_quantity',
+        'can_close',
     ];
 
     /**

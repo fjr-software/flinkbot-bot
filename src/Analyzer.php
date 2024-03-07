@@ -521,8 +521,9 @@ class Analyzer
                                 $pricePartialCloseGain = (float) ($position->side === 'SHORT' ? $markPrice - $diffPartialPrice : $markPrice + $diffPartialPrice);
                                 $pricePartialCloseGain = $this->bot->getExchange()->formatDecimal($markPrice, $pricePartialCloseGain);
 
-                                $pricePartialCloseStopGain = ($priceCloseStopGain + $entryPrice) / 2;
-                                $pricePartialCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
+                                $pricePartialCloseStopGain = $priceCloseStopGain;
+                                $priceCloseStopGain = ($pricePartialCloseStopGain + $entryPrice) / 2;
+                                $priceCloseStopGain = $this->bot->getExchange()->formatDecimal($markPrice, $priceCloseStopGain);
                             }
                         }
 
